@@ -1,0 +1,1 @@
+{"version":3,"file":"isOwner.d.ts","sourceRoot":"","sources":["../../../src/middleware/isOwner.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,OAAO,EAAE,KAAK,QAAQ,EAAE,KAAK,YAAY,EAAE,MAAM,SAAS,CAAC;AAIzE,wBAAgB,OAAO,CAAC,GAAG,EAAE,OAAO,EAAE,IAAI,EAAE,QAAQ,EAAE,IAAI,EAAE,YAAY,QAuBvE"}
