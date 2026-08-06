@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
-import LightningBackground from '../components/hero/LightningBackground'
 import AIResultsList from '../components/ai/AIResultsList'
 import { useAIRecommend } from '../hooks/queries/useAIRecommend'
 
@@ -24,14 +23,16 @@ export default function AISearchPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-black">
+    <div className="relative min-h-screen overflow-x-hidden bg-ink">
       <motion.div
-        className="fixed inset-0 -z-10"
-        animate={{ opacity: submitted ? 0.2 : 0.6 }}
+        className="pointer-events-none fixed inset-0 -z-10"
+        animate={{ opacity: submitted ? 0.35 : 0.7 }}
         transition={{ duration: 1.2, ease: 'easeOut' }}
-      >
-        <LightningBackground />
-      </motion.div>
+        style={{
+          background:
+            'radial-gradient(60% 55% at 50% 0%, rgba(47,214,191,0.14) 0%, rgba(11,20,32,0) 70%), radial-gradient(40% 40% at 85% 80%, rgba(255,180,94,0.08) 0%, rgba(11,20,32,0) 70%)',
+        }}
+      />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4">
         <div
@@ -41,29 +42,29 @@ export default function AISearchPage() {
         >
           <div className="w-full max-w-3xl">
             <motion.div layout className="text-center">
+              <motion.div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.3em] text-teal">
+                <Sparkles className="h-3.5 w-3.5" />
+                AI search
+              </motion.div>
               <motion.h1
                 layout
-                className={`font-bold text-white transition-all duration-700 ${
+                className={`font-display font-semibold tracking-tight text-paper transition-all duration-700 ${
                   submitted ? 'mb-1 text-2xl' : 'mb-3 text-4xl sm:text-5xl'
                 }`}
               >
-                AI-Powered Search
+                Search flats in plain English
               </motion.h1>
               <motion.p
                 layout
-                className={`text-white/50 transition-all duration-700 ${
+                className={`text-mist transition-all duration-700 ${
                   submitted ? 'mb-6 text-sm' : 'mb-8 text-base'
                 }`}
               >
-                Describe what you&apos;re looking for in plain English
+                Describe what you&apos;re looking for and we&apos;ll match it for you
               </motion.p>
             </motion.div>
 
-            <motion.form
-              layout
-              onSubmit={handleSubmit}
-              className="mx-auto"
-            >
+            <motion.form layout onSubmit={handleSubmit} className="mx-auto">
               <div
                 className={`relative mx-auto transition-all duration-700 ${
                   submitted ? 'max-w-2xl' : 'max-w-full'
@@ -71,7 +72,7 @@ export default function AISearchPage() {
               >
                 <div className="relative w-full">
                   <div
-                    className={`absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition-all duration-700 ${
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 text-teal transition-all duration-700 ${
                       submitted ? 'scale-75' : 'scale-100'
                     }`}
                   >
@@ -82,16 +83,14 @@ export default function AISearchPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder='Try: "2 bed flat under 15k near IIUC"'
-                    className={`w-full rounded-2xl border border-white/20 bg-white/10 pl-12 text-white placeholder-white/30 backdrop-blur-2xl outline-none transition-all duration-700 focus:border-white/40 ${
-                      submitted
-                        ? 'px-5 py-3 pr-14 text-base'
-                        : 'px-8 py-5 pr-16 text-lg sm:text-xl'
+                    className={`w-full rounded-2xl border border-white/15 bg-ink-soft/80 pl-12 text-paper placeholder-mist/40 backdrop-blur-2xl outline-none transition-all duration-700 focus:border-teal/50 ${
+                      submitted ? 'px-5 py-3 pr-14 text-base' : 'px-8 py-5 pr-16 text-lg sm:text-xl'
                     }`}
                   />
                   <button
                     type="submit"
                     disabled={isPending || !input.trim()}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-white/15 p-2 text-white/70 backdrop-blur-sm transition-colors hover:bg-white/25 disabled:opacity-30 ${
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-teal text-ink-deep transition-colors hover:brightness-110 disabled:opacity-40 ${
                       submitted ? 'p-1.5' : 'p-2.5'
                     }`}
                     aria-label="Search"
@@ -119,6 +118,7 @@ export default function AISearchPage() {
                   usedFallback={data?.usedFallback ?? false}
                   isLoading={isPending}
                   query={input}
+                  parsedFilters={data?.parsedFilters}
                 />
               </motion.div>
             )}

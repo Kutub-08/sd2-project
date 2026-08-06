@@ -9,17 +9,17 @@ type Props = {
 }
 
 const variantClasses: Record<Variant, string> = {
-  default: 'bg-gray-100 text-gray-700',
-  success: 'bg-green-100 text-green-700',
-  warning: 'bg-yellow-100 text-yellow-700',
-  danger: 'bg-red-100 text-red-700',
-  info: 'bg-blue-100 text-blue-700',
+  default: 'bg-white/5 text-paper/80 border border-white/10',
+  success: 'bg-teal/10 text-teal border border-teal/30',
+  warning: 'bg-amberglow/10 text-amberglow border border-amberglow/30',
+  danger: 'bg-red-500/15 text-red-400 border border-red-500/30',
+  info: 'bg-teal/10 text-teal border border-teal/30',
 }
 
 export default function Badge({ variant = 'default', children, className = '' }: Props) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${variantClasses[variant]} ${className}`}
     >
       {children}
     </span>

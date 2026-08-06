@@ -14,9 +14,9 @@ export default function EditListingPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-6">
+      <div className="mx-auto max-w-3xl px-4 py-8">
         <Skeleton className="mb-6 h-8 w-48" />
-        <div className="space-y-4 rounded-lg border bg-white p-6">
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-ink-soft/60 p-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
@@ -27,9 +27,9 @@ export default function EditListingPage() {
 
   if (isError || !listing) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <p className="text-lg font-medium">Listing not found</p>
-        <Link to="/landlord/dashboard" className="mt-4 text-sm text-blue-600 underline">
+      <div className="flex flex-col items-center justify-center py-20 text-mist">
+        <p className="font-display text-lg font-medium text-paper">Listing not found</p>
+        <Link to="/landlord/dashboard" className="mt-4 text-sm text-teal underline underline-offset-4">
           Back to dashboard
         </Link>
       </div>
@@ -59,9 +59,10 @@ export default function EditListingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Edit Listing</h1>
-      <div className="rounded-lg border bg-white p-6">
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-teal">Landlord</p>
+      <h1 className="mb-6 mt-1 font-display text-2xl font-semibold tracking-tight text-paper">Edit Listing</h1>
+      <div className="rounded-2xl border border-white/10 bg-ink-soft/60 p-6">
         <ListingForm
           initialData={listing}
           onSubmit={onSubmit}
