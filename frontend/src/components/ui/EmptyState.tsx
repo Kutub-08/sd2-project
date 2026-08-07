@@ -12,18 +12,18 @@ type Props = {
 
 export default function EmptyState({ icon, title, description, actionLabel, actionTo, onAction }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-white/50">
-      {icon && <div className="mb-4">{icon}</div>}
-      <p className="text-lg font-medium text-white/70">{title}</p>
-      {description && <p className="mt-1 text-sm text-white/40">{description}</p>}
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 py-24 text-center">
+      {icon && <div className="mb-4 text-teal">{icon}</div>}
+      <p className="font-display text-lg font-semibold text-paper">{title}</p>
+      {description && <p className="mt-1 max-w-sm text-sm text-mist">{description}</p>}
       {actionLabel && (
-        <div className="mt-4">
+        <div className="mt-5">
           {actionTo ? (
-            <Link to={actionTo} className="text-sm text-blue-400 underline hover:text-blue-300">
+            <Link to={actionTo} className="text-sm font-medium text-teal underline-offset-4 hover:text-teal/80 hover:underline">
               {actionLabel}
             </Link>
           ) : (
-            <button onClick={onAction} className="text-sm text-blue-400 underline hover:text-blue-300">
+            <button onClick={onAction} className="text-sm font-medium text-teal underline-offset-4 hover:text-teal/80 hover:underline">
               {actionLabel}
             </button>
           )}

@@ -17,7 +17,7 @@
 
 ## Prisma Schema (`prisma/schema/`)
 
-10 model files covering the full schema from planning.md:
+12 model files covering the full schema from planning.md:
 
 | File | Model | Key features |
 |------|-------|-------------|
@@ -25,6 +25,7 @@
 | `enum.prisma` | `UserRole` (TENANT/LANDLORD/ADMIN), `ListingStatus` (AVAILABLE/RENTED/INACTIVE), `InquiryStatus` (PENDING/RESPONDED/CLOSED) |
 | `user.prisma` | `User` | UUID PK, unique email, role, password_hash, is_verified, relations to all modules |
 | `refreshToken.prisma` | `RefreshToken` | token_hash, expires_at, revoked |
+| `passwordResetToken.prisma` | `PasswordResetToken` | token_hash, expires_at, used_at (1-time use) |
 | `listing.prisma` | `Listing` | price, size_sqft, bedrooms, bathrooms, floor_number, lat/lng, amenities[], status; indexes on city+area, price, bedrooms+bathrooms, status, lat+lng, GIN on amenities |
 | `listingImage.prisma` | `ListingImage` | image_url, is_primary, order_index |
 | `favorite.prisma` | `Favorite` | `@@unique([userId, listingId])` |
@@ -32,20 +33,31 @@
 | `review.prisma` | `Review` | rating (1-5), comment |
 | `aiSearchLog.prisma` | `AiSearchLog` | query_text, parsed_filters (JsonB) |
 
-One initial migration (`20260729214052_init`) with all tables.
+Migrations: `20260729214052_init` (all tables) + `20260806000000_add_password_reset_token` (password_reset_tokens table).
 
 ## Modules Built
 
 ### Auth (`/api/auth`)
 | Method | Path | Auth | Rate limit | Description |
 |--------|------|------|------------|-------------|
-| POST | `/api/auth/register` | No | 5/min | Register (name, email, phone, password, role) |
-| POST | `/api/auth/login` | No | 5/min | Login, returns access token + refreshToken cookie |
+| POST | `/api/auth/register` | No | 10/min | Register (name, email, phone, password, role) |
+| POST | `/api/auth/login` | No | 10/min | Login, returns access token + refreshToken cookie |
 | POST | `/api/auth/logout` | Bearer | — | Revokes refresh token, clears cookie |
-| POST | `/api/auth/refresh` | Cookie | 5/min | Rotates refresh token, issues new access token |
+| POST | `/api/auth/refresh` | Cookie | 10/min | Rotates refresh token, issues new access token |
+| POST | `/api/auth/forgot-password` | No | 10/min | Issues hashed reset token (32-byte hex, 15 min TTL); generic message to prevent email enumeration |
+| POST | `/api/auth/reset-password` | No | 10/min | Validates 1-time token, re-hashes password, updates user + marks token used in a transaction |
 | GET | `/api/auth/me` | Bearer | — | Current user profile |
 
 Files: `auth.controller.ts`, `auth.service.ts`, `auth.routes.ts`, `auth.schema.ts`, `auth.types.ts`
+
+### Users (`/api/users`)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/users/:id` | Public | Public profile (never exposes password_hash) |
+| PATCH | `/api/users/:id` | Bearer + `isSelf` | Update own profile (name, phone) |
+| GET | `/api/users/:id/listings` | Public | Listings by a landlord user (400 if not a landlord) |
+
+Files: `user.controller.ts`, `user.service.ts`, `user.routes.ts`, `user.schema.ts`, `user.types.ts`
 
 ### Listings (`/api/listings`)
 | Method | Path | Auth | Description |
@@ -105,6 +117,8 @@ Files: `ai.controller.ts`, `ai.service.ts`, `ai.routes.ts`, `ai.schema.ts`, `ai.
 
 **AI flow:** Gemini parses query → `ParsedFilters` (maxPrice, minBedrooms, area, amenities) → clamped → `buildWhereClause()` → Prisma query. Falls back to keyword search if AI fails/times out/returns empty.
 
+**`fallbackSearch.ts`** is content-aware: strips stop-words, parses price hints (`under/up to/৳Nk/taka` — `lte` for budget keywords, `equals` otherwise), detects bedroom counts from "2bhk"/"2 bed"/"2br" (structured field OR title), intersects keyword + bedroom + price constraints, capped at 20 results.
+
 ## Middleware
 
 | File | Purpose |
@@ -112,7 +126,8 @@ Files: `ai.controller.ts`, `ai.service.ts`, `ai.routes.ts`, `ai.schema.ts`, `ai.
 | `auth.ts` | `authenticate` (JWT verify) + `authorize(...roles)` |
 | `validate.ts` | Generic Zod validation (body/query/params) |
 | `isOwner.ts` | Checks `listing.landlordId === req.user.id`, returns 403 |
-| `rateLimiter.ts` | Shared tiers: `authLimiter` (5/min), `inquiryLimiter` (10/min), `aiLimiter` (10/min) |
+| `isSelf.ts` | Checks `req.params.id === req.user.id` for profile self-update, returns 403 |
+| `rateLimiter.ts` | `globalLimiter` (100/15min), `authLimiter` (10/min), `inquiryLimiter` (10/min), `aiLimiter` (10/min); all no-op when `NODE_ENV=test` |
 | `upload.ts` | Multer — memory storage, whitelist JPEG/PNG/GIF/WebP, 5MB limit |
 | `errorHandler.ts` | AppError-aware, consistent JSON error shape |
 | `notFound.ts` | 404 handler |
@@ -122,16 +137,26 @@ Files: `ai.controller.ts`, `ai.service.ts`, `ai.routes.ts`, `ai.schema.ts`, `ai.
 | File | Purpose |
 |------|---------|
 | `src/config/cloudinary.ts` | Cloudinary v2 config from env vars |
+| `src/config/logger.ts` | Winston setup — JSON in production (with `logs/error.log` + `logs/warn.log` files), colorized console in dev; `stream()` feeds morgan |
 
 ## Utilities
 
 | File | Purpose |
 |------|---------|
 | `jwt.ts` | `generateAccessToken()` / `verifyAccessToken()` |
-| `hash.ts` | `hashPassword()`, `comparePassword()`, `hashToken()` (SHA-256 for refresh tokens) |
+| `hash.ts` | `hashPassword()`, `comparePassword()`, `hashToken()` (SHA-256 for refresh + password-reset tokens) |
+| `param.ts` | Safe `req.params[name]` accessor (handles array values) |
 | `asyncHandler.ts` | Wraps async route handlers, forwards errors |
 | `AppError.ts` | Custom error class (statusCode, code, message) |
 | `apiResponse.ts` | `success()` and `fail()` response helpers |
+
+## Seed Script
+
+- `prisma/seed.ts` (`npm run prisma:seed`) — clears tables in dependency order, then creates:
+  - Users: 2 landlords + 2 tenants (password: `password123` for all)
+  - 7 sample listings across Chattogram (Panchlaish, Kumira, Khulshi, Nasirabad, Agrabad, Halishahar)
+  - 2 placeholder images (picsum.photos) per listing
+  - 4 favorites + 3 inquiries
 
 ## API Documentation
 
@@ -143,22 +168,20 @@ Files: `ai.controller.ts`, `ai.service.ts`, `ai.routes.ts`, `ai.schema.ts`, `ai.
 
 - **CORS** — restricted to `CLIENT_URL` / `FRONTEND_URL` env vars, falls back to `localhost:5173` for dev
 - **Helmet** — security headers with `crossOriginResourcePolicy: "cross-origin"`
-- **Auth endpoints** — 5 req/min
+- **Global limiter** — `globalLimiter`, 100 req/15min per IP
+- **Auth endpoints** — 10 req/min (`authLimiter`)
 - **Inquiry creation** — 10 req/min + service-level 5 inquiries/day per tenant
 - **AI recommend** — 10 req/min (cost control on LLM calls)
 - **Image upload** — file type/size validated by Multer
-- **Ownership** — `isOwner` middleware on all listing mutations
+- **Ownership** — `isOwner` middleware on all listing mutations; `isSelf` on profile updates
+- **Password reset tokens** — random 32-byte hex, stored as SHA-256 hash only, 15-min expiry, single-use, generic response to prevent email enumeration
 
 ## Remaining (from planning.md)
 
-- [ ] Forgot password / reset password endpoints (`/api/auth/forgot-password`, `/api/auth/reset-password`)
-- [ ] Users module (`/api/users/:id`, PATCH, listing by user)
-- [ ] Search/filter geo-radius queries (PostGIS)
-- [ ] AI search logging (`ai_search_logs` table exists, not wired)
-- [ ] Global rate limiter (100 req/15min per IP)
-- [ ] Winston logger setup (morgan is active, winston not wired)
+- [ ] Geo-radius / PostGIS search queries (lat/lng + bounding box exists in schema, not used for geo search)
+- [ ] AI search logging wired to DB (`ai_search_logs` table exists, not written)
 - [ ] Redis integration (rate-limit store, caching)
+- [ ] Email delivery for password reset (link is logged to console in dev)
 - [ ] SSLCommerz / Stripe payment integration
 - [ ] Tests (Jest + Supertest configured, no tests written)
 - [ ] Deployment config (Dockerfile, CI, env template)
-- [ ] Seed script (`prisma/seed.ts` not created)

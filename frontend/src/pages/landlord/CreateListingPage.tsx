@@ -45,9 +45,10 @@ export default function CreateListingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Create Listing</h1>
-      <div className="rounded-lg border bg-white p-6">
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-teal">Landlord</p>
+      <h1 className="mb-6 mt-1 font-display text-2xl font-semibold tracking-tight text-paper">Create Listing</h1>
+      <div className="rounded-2xl border border-white/10 bg-ink-soft/60 p-6">
         <ListingForm
           onSubmit={onSubmit}
           isSubmitting={createListing.isPending || uploadImage.isPending}

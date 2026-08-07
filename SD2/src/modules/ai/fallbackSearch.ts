@@ -10,7 +10,7 @@ const STOPWORDS = new Set([
   "for", "in", "with", "of", "near", "around", "any", "new", "good",
   "under", "below", "upto", "max", "budget", "less", "cheap", "available",
   "bed", "beds", "bedroom", "bedrooms", "bath", "bathroom", "bathrooms",
-  "sqft", "taka", "tk", "bdt", "please", "need", "want", "looking", "home",
+  "bhk", "br", "sqft", "taka", "tk", "bdt", "please", "need", "want", "looking", "home",
 ]);
 
 function parsePrice(query: string): { amount: number; budget: boolean } | undefined {
@@ -40,25 +40,39 @@ export async function fallbackSearch(query: string) {
 
   const priceInfo = parsePrice(query);
 
-  const bedMatch = query.match(/(\d+)\s*bed/i);
+  const bedMatch = query.match(/(\d+)\s*(?:bhk|bed|br|room|bedroom)\b/i);
   const bedrooms = bedMatch ? Number(bedMatch[1]) : undefined;
 
   const where: Record<string, unknown> = { status: "AVAILABLE" };
+  const ands: Record<string, unknown>[] = [];
 
   if (words.length > 0) {
-    where.OR = words.flatMap((word) => [
-      { area: { contains: word, mode: "insensitive" } },
-      { city: { contains: word, mode: "insensitive" } },
-      { address: { contains: word, mode: "insensitive" } },
-      { title: { contains: word, mode: "insensitive" } },
-      { description: { contains: word, mode: "insensitive" } },
-    ]);
+    ands.push({
+      OR: words.flatMap((word) => [
+        { area: { contains: word, mode: "insensitive" } },
+        { city: { contains: word, mode: "insensitive" } },
+        { address: { contains: word, mode: "insensitive" } },
+        { title: { contains: word, mode: "insensitive" } },
+        { description: { contains: word, mode: "insensitive" } },
+      ]),
+    });
   }
+
+  // A bedroom count may live in the structured field OR the title (e.g. "2bhk").
+  if (bedrooms) {
+    ands.push({
+      OR: [
+        { bedrooms },
+        { title: { contains: String(bedrooms), mode: "insensitive" } },
+      ],
+    });
+  }
+
+  if (ands.length > 0) where.AND = ands;
 
   if (priceInfo) {
     where.price = priceInfo.budget ? { lte: priceInfo.amount } : { equals: priceInfo.amount };
   }
-  if (bedrooms) where.bedrooms = bedrooms;
 
   return prisma.listing.findMany({
     where,
