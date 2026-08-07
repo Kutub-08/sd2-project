@@ -18,6 +18,7 @@ import { useListing } from '../hooks/queries/useListing'
 import { useListings } from '../hooks/queries/useListings'
 import InquiryForm from '../components/forms/InquiryForm'
 import ListingCard from '../components/listings/ListingCard'
+import ReviewSection from '../components/reviews/ReviewSection'
 import Skeleton from '../components/ui/Skeleton'
 import Badge from '../components/ui/Badge'
 import { formatCurrency } from '../utils/formatCurrency'
@@ -351,6 +352,8 @@ export default function ListingDetailsPage() {
                 </div>
               </motion.section>
             )}
+
+            <ReviewSection listingId={listing.id} landlordId={listing.landlordId} />
 
             {canInquire && similarListings.length > 0 && (
               <motion.section

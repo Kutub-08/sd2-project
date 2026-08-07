@@ -33,7 +33,7 @@ function setup(initialEntries = ['/listings']) {
 describe('Listings browse + filter', () => {
   it('renders the listings page heading', () => {
     setup()
-    expect(screen.getByText('Listings')).toBeInTheDocument()
+    expect(screen.getByText('Available flats in Bangladesh')).toBeInTheDocument()
   })
 
   it('displays listings from the API', async () => {
@@ -56,7 +56,7 @@ describe('Listings browse + filter', () => {
 
     await screen.findByText('Modern 2BR in Panchlaish')
 
-    const areaInput = screen.getByPlaceholderText('e.g. Gulshan')
+    const areaInput = screen.getByPlaceholderText('e.g. Bashundhara')
     await user.type(areaInput, 'Khulshi')
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
@@ -87,7 +87,7 @@ describe('Listings browse + filter', () => {
 
     await screen.findByText('Modern 2BR in Panchlaish')
 
-    const areaInput = screen.getByPlaceholderText('e.g. Gulshan')
+    const areaInput = screen.getByPlaceholderText('e.g. Bashundhara')
     await user.type(areaInput, 'Panchlaish')
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
@@ -124,12 +124,12 @@ describe('Listings browse + filter', () => {
 
     await screen.findByText('Modern 2BR in Panchlaish')
 
-    const areaInput = screen.getByPlaceholderText('e.g. Gulshan')
+    const areaInput = screen.getByPlaceholderText('e.g. Bashundhara')
     await user.type(areaInput, 'NonExistentAreaXYZ')
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     await vi.waitFor(() => {
-      expect(screen.getByText('No listings match your filters')).toBeInTheDocument()
+      expect(screen.getByText('No flats match your filters')).toBeInTheDocument()
     })
   })
 })

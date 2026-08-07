@@ -14,3 +14,14 @@ export const findByListing = asyncHandler(async (req: Request, res: Response) =>
   const reviews = await reviewService.findByListing(param(req, "listingId"));
   success(res, reviews);
 });
+
+export const update = asyncHandler(async (req: Request, res: Response) => {
+  const { rating, comment } = req.body;
+  const review = await reviewService.update(param(req, "id"), req.user!.id, rating, comment);
+  success(res, review);
+});
+
+export const remove = asyncHandler(async (req: Request, res: Response) => {
+  await reviewService.remove(param(req, "id"), req.user!.id);
+  success(res, { message: "Review deleted" });
+});

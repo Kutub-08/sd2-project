@@ -95,16 +95,16 @@ describe("Reviews", () => {
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("POST /api/reviews — landlord cannot create review (403)", async () => {
+  it("POST /api/reviews — landlord cannot review own listing (403)", async () => {
     const lToken = await landlordAuth();
 
     const res = await request(app)
       .post("/api/reviews")
       .set({ Authorization: `Bearer ${lToken}` })
-      .send({ listingId: listings.l2.id, rating: 4, comment: "Landlord trying to review" })
+      .send({ listingId: listings.l2.id, rating: 4, comment: "Landlord trying to review own listing" })
       .expect(403);
 
-    expect(res.body.error.code).toBe("FORBIDDEN");
+    expect(res.body.error.code).toBe("CANNOT_REVIEW_OWN_LISTING");
   });
 
   it("GET /api/reviews/listing/:listingId — returns reviews for listing", async () => {
@@ -132,5 +132,93 @@ describe("Reviews", () => {
       .expect(200);
 
     expect(res.body.data).toEqual([]);
+  });
+
+  it("POST /api/reviews — landlord can review another landlord's listing (201)", async () => {
+    const lToken = await landlordAuth();
+
+    const res = await request(app)
+      .post("/api/reviews")
+      .set({ Authorization: `Bearer ${lToken}` })
+      .send({ listingId: listings.l3.id, rating: 4, comment: "Great place to live nearby" })
+      .expect(201);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.rating).toBe(4);
+    expect(res.body.data.tenantId).toBe(users.landlord1.id);
+  });
+
+  it("PUT /api/reviews/:id — owner updates own review (200)", async () => {
+    const reviews = await request(app).get(`/api/reviews/listing/${listings.l1.id}`).expect(200);
+    const myReview = reviews.body.data.find((r: any) => r.tenantId === users.tenant1.id);
+
+    const res = await request(app)
+      .put(`/api/reviews/${myReview.id}`)
+      .set(auth())
+      .send({ rating: 4, comment: "Updated my review after visiting" })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.rating).toBe(4);
+    expect(res.body.data.comment).toBe("Updated my review after visiting");
+  });
+
+  it("PUT /api/reviews/:id — cannot update someone else's review (403)", async () => {
+    const reviews = await request(app).get(`/api/reviews/listing/${listings.l3.id}`).expect(200);
+    const landlordReview = reviews.body.data.find((r: any) => r.tenantId === users.landlord1.id);
+
+    const res = await request(app)
+      .put(`/api/reviews/${landlordReview.id}`)
+      .set(auth())
+      .send({ rating: 1, comment: "Trying to hijack a review" })
+      .expect(403);
+
+    expect(res.body.error.code).toBe("FORBIDDEN");
+  });
+
+  it("PUT /api/reviews/:id — validates rating range (400)", async () => {
+    const reviews = await request(app).get(`/api/reviews/listing/${listings.l1.id}`).expect(200);
+    const myReview = reviews.body.data.find((r: any) => r.tenantId === users.tenant1.id);
+
+    const res = await request(app)
+      .put(`/api/reviews/${myReview.id}`)
+      .set(auth())
+      .send({ rating: 7, comment: "Out of range rating" })
+      .expect(400);
+
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("PUT /api/reviews/:id — requires authentication (401)", async () => {
+    const res = await request(app)
+      .put(`/api/reviews/00000000-0000-0000-0000-000000000000`)
+      .send({ rating: 3, comment: "Not logged in" })
+      .expect(401);
+
+    expect(res.body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  it("DELETE /api/reviews/:id — nonexistent review (404)", async () => {
+    const res = await request(app)
+      .delete(`/api/reviews/00000000-0000-0000-0000-000000000000`)
+      .set(auth())
+      .expect(404);
+
+    expect(res.body.error.code).toBe("NOT_FOUND");
+  });
+
+  it("DELETE /api/reviews/:id — owner deletes own review (200)", async () => {
+    const reviews = await request(app).get(`/api/reviews/listing/${listings.l3.id}`).expect(200);
+    const landlordReview = reviews.body.data.find((r: any) => r.tenantId === users.landlord1.id);
+
+    const res = await request(app)
+      .delete(`/api/reviews/${landlordReview.id}`)
+      .set({ Authorization: `Bearer ${await landlordAuth()}` })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+
+    const after = await request(app).get(`/api/reviews/listing/${listings.l3.id}`).expect(200);
+    expect(after.body.data).toEqual([]);
   });
 });

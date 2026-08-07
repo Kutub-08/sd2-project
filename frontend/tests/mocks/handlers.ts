@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import type { Listing, ListingImage } from '../../src/types/listing.types'
 import type { Favorite } from '../../src/types/favorite.types'
 import type { Inquiry } from '../../src/types/inquiry.types'
+import type { Review } from '../../src/types/review.types'
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api'
 
@@ -53,9 +54,31 @@ const mockListings: Listing[] = [
 let listingCounter = 4
 let favoriteCounter = 0
 let inquiryCounter = 0
+let reviewCounter = 2
 
 const favorites: Favorite[] = []
 const inquiries: Inquiry[] = []
+
+const mockReviews: Review[] = [
+  {
+    id: 'r1',
+    listingId: 'l1',
+    tenantId: 'tenant1',
+    rating: 5,
+    comment: 'Excellent flat, highly recommend!',
+    createdAt: new Date().toISOString(),
+    tenant: { id: 'tenant1', name: 'Test Tenant' },
+  },
+  {
+    id: 'r2',
+    listingId: 'l1',
+    tenantId: 'tenant2',
+    rating: 4,
+    comment: 'Great location and value for money.',
+    createdAt: new Date().toISOString(),
+    tenant: { id: 'tenant2', name: 'Sadia Rahman' },
+  },
+]
 
 const testUser = { id: 'tenant1', name: 'Test Tenant', email: 'tenant@test.com', role: 'TENANT' as const }
 const testLandlord = { id: 'landlord1', name: 'Rahim Khan', email: 'rahim@test.com', role: 'LANDLORD' as const }
@@ -266,5 +289,44 @@ export const handlers = [
     if (!inquiry) return HttpResponse.json({ success: false, error: { code: 'NOT_FOUND', message: 'Inquiry not found' } }, { status: 404 })
     inquiry.status = body.status as Inquiry['status']
     return HttpResponse.json({ success: true, data: inquiry })
+  }),
+
+  // ─── Reviews ───
+
+  http.get(`${BASE}/reviews/listing/:listingId`, ({ params }) => {
+    const items = mockReviews.filter((r) => r.listingId === params.listingId)
+    return HttpResponse.json({ success: true, data: items })
+  }),
+
+  http.post(`${BASE}/reviews`, async ({ request }) => {
+    const body = (await request.json()) as { listingId: string; rating: number; comment: string }
+    reviewCounter++
+    const review: Review = {
+      id: `r${reviewCounter}`,
+      listingId: body.listingId,
+      tenantId: 'tenant1',
+      rating: body.rating,
+      comment: body.comment,
+      createdAt: new Date().toISOString(),
+      tenant: { id: 'tenant1', name: 'Test Tenant' },
+    }
+    mockReviews.push(review)
+    return HttpResponse.json({ success: true, data: review }, { status: 201 })
+  }),
+
+  http.put(`${BASE}/reviews/:id`, async ({ params, request }) => {
+    const body = (await request.json()) as { rating: number; comment: string }
+    const review = mockReviews.find((r) => r.id === params.id)
+    if (!review) return HttpResponse.json({ success: false, error: { code: 'NOT_FOUND', message: 'Review not found' } }, { status: 404 })
+    review.rating = body.rating
+    review.comment = body.comment
+    return HttpResponse.json({ success: true, data: review })
+  }),
+
+  http.delete(`${BASE}/reviews/:id`, ({ params }) => {
+    const idx = mockReviews.findIndex((r) => r.id === params.id)
+    if (idx === -1) return HttpResponse.json({ success: false, error: { code: 'NOT_FOUND', message: 'Review not found' } }, { status: 404 })
+    mockReviews.splice(idx, 1)
+    return HttpResponse.json({ success: true, data: { message: 'Review deleted' } })
   }),
 ]
