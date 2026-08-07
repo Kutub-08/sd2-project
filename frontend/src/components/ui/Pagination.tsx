@@ -30,7 +30,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="rounded px-3 py-2 text-sm text-white/50 transition-colors hover:bg-white/10 disabled:opacity-20 disabled:hover:bg-transparent"
+        className="rounded-lg px-3 py-2 text-sm text-mist transition-colors hover:bg-white/5 disabled:opacity-20"
         aria-label="Previous page"
       >
         Prev
@@ -38,17 +38,17 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
 
       {pages.map((page, i) =>
         page === 'ellipsis' ? (
-          <span key={`ellipsis-${i}`} className="px-2 py-2 text-sm text-white/30">
+          <span key={`ellipsis-${i}`} className="px-2 py-2 text-sm text-mist/50">
             …
           </span>
         ) : (
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`rounded px-3 py-2 text-sm transition-colors ${
+            className={`rounded-lg px-3 py-2 text-sm transition-colors ${
               page === currentPage
-                ? 'bg-white/10 text-white'
-                : 'text-white/50 hover:bg-white/10'
+                ? 'bg-teal font-semibold text-ink-deep'
+                : 'text-mist hover:bg-white/5 hover:text-paper'
             }`}
             aria-current={page === currentPage ? 'page' : undefined}
           >
@@ -60,7 +60,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pr
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="rounded px-3 py-2 text-sm text-white/50 transition-colors hover:bg-white/10 disabled:opacity-20 disabled:hover:bg-transparent"
+        className="rounded-lg px-3 py-2 text-sm text-mist transition-colors hover:bg-white/5 disabled:opacity-40"
         aria-label="Next page"
       >
         Next
