@@ -50,7 +50,7 @@ describe('Create listing', () => {
     expect(screen.getByRole('heading', { name: 'Create Listing' })).toBeInTheDocument()
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
     expect(screen.getByLabelText('Description')).toBeInTheDocument()
-    expect(screen.getByLabelText('Price (monthly)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Price (monthly, ৳)')).toBeInTheDocument()
     expect(screen.getByLabelText('Size (sqft)')).toBeInTheDocument()
     expect(screen.getByLabelText('Bedrooms')).toBeInTheDocument()
     expect(screen.getByLabelText('Bathrooms')).toBeInTheDocument()
@@ -77,7 +77,7 @@ describe('Create listing', () => {
 
     await user.type(screen.getByLabelText('Title'), 'New Test Apartment')
     await user.type(screen.getByLabelText('Description'), 'A beautiful apartment in the heart of the city with all modern amenities')
-    await user.type(screen.getByLabelText('Price (monthly)'), '25000')
+    await user.type(screen.getByLabelText('Price (monthly, ৳)'), '25000')
     await user.type(screen.getByLabelText('Size (sqft)'), '1200')
     await user.type(screen.getByLabelText('Bedrooms'), '3')
     await user.type(screen.getByLabelText('Bathrooms'), '2')
