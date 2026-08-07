@@ -142,6 +142,13 @@ Redis (rate-limit store, cache for popular search queries)
 | parsed_filters | JSONB | budget, location, bedrooms extracted by AI |
 | created_at | TIMESTAMP |
 
+### `password_reset_tokens` (implemented — password reset flow)
+| id | UUID PK |
+| user_id | FK → users.id (onDelete: Cascade) |
+| token_hash | VARCHAR | SHA-256 hash of the raw reset token |
+| expires_at | TIMESTAMP | |
+| used_at | TIMESTAMP | null until the token is consumed |
+
 **Indexes:**
 - `listings(city, area)`, `listings(price)`, `listings(bedrooms, bathrooms)`, `listings(status)`
 - Composite index on `(latitude, longitude)` or PostGIS GIST index if using geo queries
@@ -158,10 +165,14 @@ POST   /api/auth/register            (role: tenant | landlord)
 POST   /api/auth/login
 POST   /api/auth/logout
 POST   /api/auth/refresh
-POST   /api/auth/forgot-password
-POST   /api/auth/reset-password
+POST   /api/auth/forgot-password      (implemented — issues hashed reset token, 15 min TTL)
+POST   /api/auth/reset-password       (implemented — validates 1-time token, updates password in tx)
 GET    /api/auth/me
 ```
+**Password reset flow (implemented):**
+1. `POST /auth/forgot-password` with `{ email }` — always returns the same generic success message to prevent email enumeration.
+2. If the user exists, a 32-byte hex token is generated, stored as a SHA-256 hash in `password_reset_tokens` with a 15-minute expiry, and a reset link is logged (dev) / emailed.
+3. `POST /auth/reset-password` with `{ token, newPassword }` — looks up the unexpired, unused token hash, re-hashes the new password (bcrypt), and updates the user + marks the token used inside a single Prisma transaction.
 
 ### Listings
 ```
@@ -208,11 +219,11 @@ POST   /api/ai/recommend             { query: "flat under 15k in Panchlaish, 2 b
 GET    /api/ai/similar/:listingId    → "similar flats" suggestions
 ```
 
-### Users
+### Users (implemented)
 ```
-GET    /api/users/:id
-PATCH  /api/users/:id
-GET    /api/users/:id/listings       (if landlord)
+GET    /api/users/:id            (public — never exposes password_hash)
+PATCH  /api/users/:id            (authenticated + isSelf — name, phone)
+GET    /api/users/:id/listings   (listings by a landlord user, 400 if not a landlord)
 ```
 
 ---
@@ -222,9 +233,10 @@ GET    /api/users/:id/listings       (if landlord)
 - **JWT access token** (15 min) + **refresh token** (7 days, httpOnly cookie, hashed in DB).
 - **Roles:** `tenant`, `landlord`, `admin`.
 - **Middleware:**
-  - `authenticate` — verifies token, attaches `req.user`.
-  - `authorize(...roles)` — restricts listing creation to landlords, admin routes to admins.
-  - `isOwner` — custom middleware checking `listing.landlord_id === req.user.id` before allowing update/delete (prevents a landlord editing someone else's listing).
+- `authenticate` — verifies token, attaches `req.user`.
+- `authorize(...roles)` — restricts listing creation to landlords, admin routes to admins.
+- `isOwner` — custom middleware checking `listing.landlord_id === req.user.id` before allowing update/delete (prevents a landlord editing someone else's listing).
+- `isSelf` — custom middleware for profile updates, checking `req.params.id === req.user.id` before a user can modify their own profile (403 otherwise).
 - Password hashing via bcrypt, min 10 salt rounds.
 - Optional phone/email verification (OTP) before a landlord can publish listings — reduces fake/spam listings.
 
@@ -232,16 +244,17 @@ GET    /api/users/:id/listings       (if landlord)
 
 ## 7. Middleware Stack (execution order)
 
-1. `helmet()` — security headers
+1. `helmet()` — security headers (with `crossOriginResourcePolicy: "cross-origin"`)
 2. `cors()` — restrict to frontend origin
 3. `express.json()` — body parsing
-4. `morgan` → piped to Winston logger
-5. Global rate limiter (100 req/15min per IP)
-6. Stricter limiter on `/auth/*` and `/inquiries` (prevent spam contact requests / brute-force login)
-7. Route-level `authenticate` / `authorize(role)` / `isOwner`
-8. Zod validation middleware per route
-9. Route handler
-10. Centralized error handler (last) — consistent JSON error shape
+4. `cookieParser()`
+5. `morgan` → piped to Winston logger (via `src/config/logger.ts` stream)
+6. Global rate limiter (100 req/15min per IP, `globalLimiter` — no-op in test env)
+7. Route-level limiters: `authLimiter`, `inquiryLimiter`, `aiLimiter`
+8. Route-level `authenticate` / `authorize(role)` / `isOwner` / `isSelf`
+9. Zod validation middleware per route
+10. Route handler
+11. Centralized error handler (last) — consistent JSON error shape
 
 ---
 
@@ -275,6 +288,7 @@ GET    /api/users/:id/listings       (if landlord)
 - Always validate the AI's parsed filters (e.g. clamp negative/absurd prices) before running the DB query — never trust the LLM output blindly.
 - Fallback to keyword-based search if the AI call fails or times out, so the core search feature doesn't depend on AI uptime.
 - Rate-limit this endpoint separately since LLM calls cost more than a normal DB query.
+- `fallbackSearch.ts` is content-aware: strips stop-words, parses price hints (`under/up to/৳Nk/taka`), detects bedroom counts (e.g. "2bhk"), and intersects keyword matches + budget + bedroom constraints before returning up to 20 results. Disabled (no-op) when `NODE_ENV=test`.
 
 ---
 
@@ -307,7 +321,7 @@ src/modules/ai/
   { "success": false, "error": { "code": "VALIDATION_ERROR", "message": "..." } }
   ```
 - `AppError` class distinguishes operational (4xx) vs unexpected (5xx) errors.
-- Winston logs: request logs, error logs with stack traces, separate log channel for AI service failures/timeouts.
+- Winston logs: request logs (via morgan stream), error logs with stack traces, separate log channel for AI service failures/timeouts.
 - No raw DB/stack traces leaked to client in production.
 
 ---
@@ -346,8 +360,12 @@ src/modules/ai/
 9. Reviews module (optional, if time permits)
 10. Rate limiting, security hardening (helmet, CORS, ownership checks)
 11. Swagger API docs
-12. Test suite (unit + integration)
-13. Deployment config (env vars, image storage credentials, CI)
+12. Users module (public profile, self-update, landlord listings) — implemented
+13. Password reset (forgot/reset + `password_reset_tokens`) — implemented
+14. Winston logging + global limiter wiring — implemented
+15. Seed script (`prisma/seed.ts` — users, listings, images, favorites, inquiries)
+16. Test suite (unit + integration)
+17. Deployment config (env vars, image storage credentials, CI)
 Backend Folder Structure (TypeScript) — To-Let Flat Rental Platform
 backend/
 ├── src/
@@ -362,7 +380,8 @@ backend/
 │   ├── middleware/
 │   │   ├── auth.ts                   # authenticate + authorize(...roles)
 │   │   ├── isOwner.ts                # checks listing.landlord_id === req.user.id
-│   │   ├── rateLimiter.ts            # global + route-specific limiters
+│   │   ├── isSelf.ts                 # checks req.params.id === req.user.id (profile self-update)
+│   │   ├── rateLimiter.ts            # global (100/15min) + auth/inquiry/ai limiters (+ test no-op)
 │   │   ├── validate.ts               # generic Zod validation middleware
 │   │   ├── upload.ts                 # Multer config (file type/size validation)
 │   │   ├── errorHandler.ts           # centralized error-handling middleware
@@ -430,6 +449,7 @@ backend/
 │   │   ├── jwt.ts                    # sign/verify token helpers
 │   │   ├── hash.ts                   # bcrypt helpers
 │   │   ├── apiResponse.ts            # consistent success/error response shape
+│   │   ├── param.ts                  # safe req.params[name] accessor (handles arrays)
 │   │   ├── pagination.ts             # shared pagination helper
 │   │   └── geo.ts                    # distance calc / bounding-box helpers for location search
 │   │
@@ -443,13 +463,23 @@ backend/
 │   ├── routes/
 │   │   └── index.ts                  # mounts all module routers under /api
 │   │
-│   ├── app.ts                        # express app setup (middleware chain, routes)
-│   └── server.ts                     # entrypoint — starts HTTP server, connects DB/Redis
+│   ├── app.ts                        # express app setup (middleware chain, routes, globalLimiter)
+│   └── server.ts                     # entrypoint — starts HTTP server, connects DB
 │
 ├── prisma/
-│   ├── schema.prisma
-│   ├── migrations/
-│   └── seed.ts                       # sample landlords/listings for local dev
+│   ├── schema/                       # multi-file Prisma schema (schema.prisma + model files)
+│   │   ├── user.prisma               # User (+ relation to PasswordResetToken)
+│   │   ├── passwordResetToken.prisma # password_reset_tokens (token_hash, expires_at, used_at)
+│   │   ├── listing.prisma
+│   │   ├── listingImage.prisma
+│   │   ├── favorite.prisma
+│   │   ├── inquiry.prisma
+│   │   ├── review.prisma
+│   │   ├── aiSearchLog.prisma
+│   │   ├── refreshToken.prisma
+│   │   └── enum.prisma
+│   ├── migrations/                   # init + add_password_reset_token
+│   └── seed.ts                       # sample landlords/listings/images/favorites/inquiries for local dev
 │
 ├── tests/
 │   ├── unit/
