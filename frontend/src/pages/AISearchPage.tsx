@@ -1,25 +1,45 @@
 import { useState, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import AIResultsList from '../components/ai/AIResultsList'
+import AreaPriceResult from '../components/ai/AreaPriceResult'
 import { useAIRecommend } from '../hooks/queries/useAIRecommend'
+import { useAreaPrice } from '../hooks/queries/useAreaPrice'
+
+type Mode = 'recommend' | 'price'
+
+const PLACEHOLDERS: Record<Mode, string> = {
+  recommend: 'Try: "2 bed flat under 15k near IIUC"',
+  price: 'Try: "flats in Khulshi under 18000"',
+}
 
 export default function AISearchPage() {
-  const { data, mutate, isPending } = useAIRecommend()
+  const recommend = useAIRecommend()
+  const price = useAreaPrice()
+  const [mode, setMode] = useState<Mode>('recommend')
   const [input, setInput] = useState('')
   const [submitted, setSubmitted] = useState(false)
+
+  const isPending = mode === 'recommend' ? recommend.isPending : price.isPending
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed) return
     setSubmitted(true)
-    mutate(trimmed, {
+    const mutation = mode === 'recommend' ? recommend.mutate : price.mutate
+    mutation(trimmed, {
       onError: () => {
-        toast.error("Couldn't understand that — showing keyword results instead")
+        toast.error("Couldn't process that — please try again")
       },
     })
+  }
+
+  function switchMode(next: Mode) {
+    setMode(next)
+    setInput('')
+    setSubmitted(false)
   }
 
   return (
@@ -52,7 +72,7 @@ export default function AISearchPage() {
                   submitted ? 'mb-1 text-2xl' : 'mb-3 text-4xl sm:text-5xl'
                 }`}
               >
-                Search flats in plain English
+                {mode === 'recommend' ? 'Search flats in plain English' : 'Check current rents by area'}
               </motion.h1>
               <motion.p
                 layout
@@ -60,9 +80,34 @@ export default function AISearchPage() {
                   submitted ? 'mb-6 text-sm' : 'mb-8 text-base'
                 }`}
               >
-                Describe what you&apos;re looking for and we&apos;ll match it for you
+                {mode === 'recommend'
+                  ? 'Describe what you&apos;re looking for and we&apos;ll match it for you'
+                  : 'Name an area and see min, average and max rents plus the best flats'}
               </motion.p>
             </motion.div>
+
+            <div className="mx-auto mb-6 flex w-fit gap-1 rounded-full border border-white/10 bg-ink-soft p-1">
+              <button
+                type="button"
+                onClick={() => switchMode('recommend')}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm transition-colors ${
+                  mode === 'recommend' ? 'bg-teal text-ink-deep' : 'text-mist hover:text-paper'
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Recommend
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('price')}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm transition-colors ${
+                  mode === 'price' ? 'bg-teal text-ink-deep' : 'text-mist hover:text-paper'
+                }`}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                Area prices
+              </button>
+            </div>
 
             <motion.form layout onSubmit={handleSubmit} className="mx-auto">
               <div
@@ -82,7 +127,7 @@ export default function AISearchPage() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder='Try: "2 bed flat under 15k near IIUC"'
+                    placeholder={PLACEHOLDERS[mode]}
                     className={`w-full rounded-2xl border border-white/15 bg-ink-soft/80 pl-12 text-paper placeholder-mist/40 backdrop-blur-2xl outline-none transition-all duration-700 focus:border-teal/50 ${
                       submitted ? 'px-5 py-3 pr-14 text-base' : 'px-8 py-5 pr-16 text-lg sm:text-xl'
                     }`}
@@ -112,14 +157,18 @@ export default function AISearchPage() {
                 transition={{ duration: 0.7, delay: 0.4 }}
                 className="mt-10"
               >
-                <AIResultsList
-                  results={data?.results ?? []}
-                  total={data?.total ?? 0}
-                  usedFallback={data?.usedFallback ?? false}
-                  isLoading={isPending}
-                  query={input}
-                  parsedFilters={data?.parsedFilters}
-                />
+                {mode === 'recommend' ? (
+                  <AIResultsList
+                    results={recommend.data?.results ?? []}
+                    total={recommend.data?.total ?? 0}
+                    usedFallback={recommend.data?.usedFallback ?? false}
+                    isLoading={recommend.isPending}
+                    query={input}
+                    parsedFilters={recommend.data?.parsedFilters}
+                  />
+                ) : (
+                  <AreaPriceResult data={price.data} isLoading={price.isPending} />
+                )}
               </motion.div>
             )}
           </div>

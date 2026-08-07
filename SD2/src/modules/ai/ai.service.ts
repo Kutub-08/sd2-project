@@ -1,13 +1,18 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { buildWhereClause } from "../listings/listing.filters.js";
 import { fallbackSearch } from "./fallbackSearch.js";
-import { EXTRACT_FILTERS_PROMPT } from "./prompts.js";
-import type { ParsedFilters, RecommendResult } from "./ai.types.js";
+import { EXTRACT_AREA_PROMPT, EXTRACT_FILTERS_PROMPT } from "./prompts.js";
+import type {
+  AreaPriceResult,
+  ParsedArea,
+  ParsedFilters,
+  RecommendResult,
+} from "./ai.types.js";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 const listingInclude = {
   landlord: { select: { id: true, name: true, email: true, phone: true } },
@@ -29,18 +34,21 @@ function clampFilters(filters: ParsedFilters): ParsedFilters {
   };
 }
 
-async function callAI(query: string): Promise<ParsedFilters | null> {
+async function callAI(prompt: string, json = true): Promise<string | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const result = await model.generateContent(
-      `${EXTRACT_FILTERS_PROMPT}\n\nQuery: "${query}"`,
+    const completion = await groq.chat.completions.create(
+      {
+        model: GROQ_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        temperature: json ? 0 : 0.5,
+        ...(json ? { response_format: { type: "json_object" as const } } : {}),
+      },
       { signal: controller.signal }
     );
-    const text = result.response.text().trim();
-    const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
-    return clampFilters(JSON.parse(cleaned) as ParsedFilters);
+    return completion.choices[0]?.message.content?.trim() ?? null;
   } catch {
     return null;
   } finally {
@@ -48,8 +56,38 @@ async function callAI(query: string): Promise<ParsedFilters | null> {
   }
 }
 
+async function callAIJSON(query: string): Promise<ParsedFilters | null> {
+  const text = await callAI(`${EXTRACT_FILTERS_PROMPT}\n\nQuery: "${query}"`);
+  if (!text) return null;
+  const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  try {
+    return clampFilters(JSON.parse(cleaned) as ParsedFilters);
+  } catch {
+    return null;
+  }
+}
+
+async function callAreaAI(query: string): Promise<ParsedArea | null> {
+  const text = await callAI(`${EXTRACT_AREA_PROMPT}\n\nQuery: "${query}"`);
+  if (!text) return null;
+  const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  try {
+    const parsed = JSON.parse(cleaned) as ParsedArea;
+    if (!parsed.area || !parsed.area.trim()) return null;
+    return {
+      area: parsed.area.trim(),
+      maxPrice:
+        parsed.maxPrice !== undefined
+          ? Math.max(0, Math.min(9_999_999, parsed.maxPrice))
+          : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function recommend(query: string): Promise<RecommendResult> {
-  const filters = await callAI(query);
+  const filters = await callAIJSON(query);
 
   const isEmpty =
     !filters ||
@@ -143,4 +181,96 @@ export async function findSimilar(listingId: string) {
     orderBy: { createdAt: "desc" },
     take: 10,
   });
+}
+
+type PricedListing = Record<string, unknown> & {
+  price: unknown;
+  reviews?: Array<{ rating: number }>;
+};
+
+const priceListingInclude = {
+  landlord: { select: { id: true, name: true, email: true, phone: true } },
+  images: { orderBy: { orderIndex: "asc" as const } },
+  reviews: { select: { rating: true } },
+};
+
+function avgRating(listing: PricedListing): number {
+  const reviews = listing.reviews ?? [];
+  if (reviews.length === 0) return 0;
+  const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+  return sum / reviews.length;
+}
+
+const PRICE_SUMMARY_PROMPT = `You are a real-estate analyst for Chattogram's flat-rental market.
+Given a JSON summary of currently available listings in an area, write 2-3 short sentences (plain text, no markdown)
+about the current rent situation: overall range, what a typical flat costs, and how the cheapest and best-reviewed
+listings compare. Do not invent numbers outside the summary.`;
+
+const STOPWORDS = new Set([
+  "the", "a", "an", "flat", "flats", "rent", "rental", "rented", "price",
+  "for", "in", "with", "of", "near", "around", "any", "new", "good",
+  "under", "below", "upto", "max", "budget", "less", "cheap", "available",
+  "affordable", "best", "review", "reviews", "and", "or", "show", "me", "what",
+]);
+
+export async function areaPrice(query: string): Promise<AreaPriceResult> {
+  const parsed = await callAreaAI(query);
+
+  let where: Record<string, unknown> = { status: "AVAILABLE" };
+  const fallbackTerms = query
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w));
+
+  const areaName = parsed?.area?.trim() || fallbackTerms[0];
+  if (areaName) {
+    where.OR = [
+      { area: { contains: areaName, mode: "insensitive" } },
+      { city: { contains: areaName, mode: "insensitive" } },
+      { address: { contains: areaName, mode: "insensitive" } },
+    ];
+  }
+
+  if (parsed?.maxPrice !== undefined) {
+    where.price = { lte: parsed.maxPrice };
+  }
+
+  const listings = (await prisma.listing.findMany({
+    where,
+    include: priceListingInclude,
+    orderBy: { price: "asc" },
+    take: 100,
+  })) as PricedListing[];
+
+  if (listings.length === 0) {
+    return {
+      query,
+      area: areaName ?? "",
+      summary: { count: 0, minPrice: null, avgPrice: null, maxPrice: null },
+      cheapest: [],
+      bestReviewed: [],
+      insight: "",
+    };
+  }
+
+  const prices = listings.map((l) => Number(l.price)).filter((n) => Number.isFinite(n));
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+  const summary = { count: listings.length, minPrice, avgPrice, maxPrice };
+
+  const cheapest = listings.slice(0, 10);
+  const bestReviewed = [...listings]
+    .sort((a, b) => avgRating(b) - avgRating(a))
+    .slice(0, 10);
+
+  let insight = "";
+  const text = await callAI(
+    `${PRICE_SUMMARY_PROMPT}\n\nSummary: ${JSON.stringify(summary)}`,
+    false
+  );
+  if (text) insight = text.trim();
+
+  return { query, area: areaName ?? "", summary, cheapest, bestReviewed, insight };
 }

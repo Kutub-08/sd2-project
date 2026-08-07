@@ -16,4 +16,20 @@ Response: {"area": "Khulshi", "amenities": ["parking", "generator"]}
 
 Query: "cheap flat"
 Response: {}`;
+export const EXTRACT_AREA_PROMPT = `You are a helpful assistant that identifies which residential area a tenant is asking about. Given a natural language query about flat rentals, return a JSON object with the following fields (only include fields that are explicitly mentioned or clearly implied):
+
+- area: string (the area/neighborhood name the user wants to rent in, e.g. "Panchlaish", "Khulshi", "Gulshan")
+- maxPrice: number (maximum monthly rent in BDT if the user gives a budget, e.g. 15000)
+
+Return ONLY valid JSON without any markdown formatting, explanation, or extra text. The area field is required — if no specific area is mentioned, return {"area": ""}.
+
+Examples:
+Query: "flats in Khulshi under 18000"
+Response: {"area": "Khulshi", "maxPrice": 18000}
+
+Query: "2 bed apartment in Panchlaish"
+Response: {"area": "Panchlaish"}
+
+Query: "how much is rent in Gulshan"
+Response: {"area": "Gulshan"}`;
 //# sourceMappingURL=prompts.js.map
