@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
 import { aiLimiter } from "../../middleware/rateLimiter.js";
-import { recommendSchema } from "./ai.schema.js";
+import { priceSchema, recommendSchema } from "./ai.schema.js";
 import * as aiController from "./ai.controller.js";
 
 const router = Router();
@@ -38,6 +38,40 @@ const router = Router();
  *       429: { $ref: '#/components/schemas/Error' }
  */
 router.post("/recommend", aiLimiter, validate(recommendSchema), aiController.recommend);
+
+/**
+ * @swagger
+ * /ai/price:
+ *   post:
+ *     summary: AI-powered current rent prices for an area (min/avg/max + cheapest + best-reviewed flats)
+ *     tags: [AI]
+ *     rateLimit: 10/min
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [query]
+ *             properties:
+ *               query: { type: string, minLength: 2, example: "flats in Khulshi under 18000" }
+ *     responses:
+ *       200:
+ *         description: Price summary, cheapest and best-reviewed listings for the area
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 query: { type: string }
+ *                 area: { type: string }
+ *                 summary: { type: object }
+ *                 cheapest: { type: array }
+ *                 bestReviewed: { type: array }
+ *                 insight: { type: string }
+ *       429: { $ref: '#/components/schemas/Error' }
+ */
+router.post("/price", aiLimiter, validate(priceSchema), aiController.areaPrice);
 
 /**
  * @swagger

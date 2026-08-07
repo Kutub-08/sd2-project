@@ -3,13 +3,15 @@ import { beforeAll, afterAll, beforeEach, it, expect, jest, describe } from "@je
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let request: any, app: any, prisma: any, clearDatabase: any, seedUsers: any, seedListings: any, setTokens: any, getAccessToken: any;
 
-const mockGenerateContent = jest.fn<() => Promise<unknown>>();
+const mockGroqCreate = jest.fn<() => Promise<unknown>>();
 
-jest.unstable_mockModule("@google/generative-ai", () => ({
-  GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-    getGenerativeModel: jest.fn().mockReturnValue({
-      generateContent: mockGenerateContent,
-    }),
+jest.unstable_mockModule("groq-sdk", () => ({
+  default: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: mockGroqCreate,
+      },
+    },
   })),
 }));
 
@@ -560,15 +562,19 @@ describe("Inquiries", () => {
 
 describe("AI Recommend", () => {
   beforeEach(() => {
-    mockGenerateContent.mockReset();
+    mockGroqCreate.mockReset();
   });
 
+  function groqResponse(content: string) {
+    return {
+      choices: [{ message: { content } }],
+    } satisfies { choices: Array<{ message: { content: string } }> };
+  }
+
   it("POST /api/ai/recommend — success path with parsed filters", async () => {
-    mockGenerateContent.mockResolvedValue({
-      response: {
-        text: () => '{"maxPrice": 15000, "minBedrooms": 2, "area": "Panchlaish"}',
-      },
-    } satisfies { response: { text: () => string } });
+    mockGroqCreate.mockResolvedValue(
+      groqResponse('{"maxPrice": 15000, "minBedrooms": 2, "area": "Panchlaish"}')
+    );
 
     const res = await request(app)
       .post("/api/ai/recommend")
@@ -584,8 +590,8 @@ describe("AI Recommend", () => {
     expect(res.body.data.total).toBeGreaterThanOrEqual(1);
   });
 
-  it("POST /api/ai/recommend — Gemini failure triggers fallback", async () => {
-    mockGenerateContent.mockRejectedValue(new Error("Gemini API error"));
+  it("POST /api/ai/recommend — Groq failure triggers fallback", async () => {
+    mockGroqCreate.mockRejectedValue(new Error("Groq API error"));
 
     const res = await request(app)
       .post("/api/ai/recommend")
@@ -600,6 +606,61 @@ describe("AI Recommend", () => {
     const res = await request(app)
       .post("/api/ai/recommend")
       .send({ query: "ab" })
+      .expect(400);
+
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+});
+
+// ════════════════════════════════════════════
+//  AI Price
+// ════════════════════════════════════════════
+
+describe("AI Price", () => {
+  beforeEach(() => {
+    mockGroqCreate.mockReset();
+  });
+
+  function groqResponse(content: string) {
+    return {
+      choices: [{ message: { content } }],
+    } satisfies { choices: Array<{ message: { content: string } }> };
+  }
+
+  it("POST /api/ai/price — returns summary, cheapest and best-reviewed listings", async () => {
+    mockGroqCreate.mockResolvedValue(
+      groqResponse('{"area": "Panchlaish", "maxPrice": 20000}')
+    );
+
+    const res = await request(app)
+      .post("/api/ai/price")
+      .send({ query: "flats in Panchlaish under 20000" })
+      .expect(200);
+
+    expect(res.body.data.area).toBe("Panchlaish");
+    expect(res.body.data.summary.count).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.summary.minPrice).toBeGreaterThan(0);
+    expect(res.body.data.cheapest.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.bestReviewed.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("POST /api/ai/price — Groq failure still returns DB results without insight", async () => {
+    mockGroqCreate.mockRejectedValue(new Error("Groq API error"));
+
+    const res = await request(app)
+      .post("/api/ai/price")
+      .send({ query: "flats in Khulshi" })
+      .expect(200);
+
+    expect(res.body.data.area).toBe("khulshi");
+    expect(res.body.data.summary.count).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.insight).toBe("");
+  });
+
+  it("POST /api/ai/price — validation rejects short query", async () => {
+    const res = await request(app)
+      .post("/api/ai/price")
+      .send({ query: "x" })
       .expect(400);
 
     expect(res.body.error.code).toBe("VALIDATION_ERROR");

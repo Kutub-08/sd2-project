@@ -1,4 +1,4 @@
-import type { RecommendResult } from "./ai.types.js";
+import type { AreaPriceResult, RecommendResult } from "./ai.types.js";
 export declare function recommend(query: string): Promise<RecommendResult>;
 export declare function findSimilar(listingId: string): Promise<({
     landlord: {
@@ -34,4 +34,5 @@ export declare function findSimilar(listingId: string): Promise<({
     amenities: string[];
     status: import("../../../generated/prisma/enums.js").ListingStatus;
 })[]>;
+export declare function areaPrice(query: string): Promise<AreaPriceResult>;
 //# sourceMappingURL=ai.service.d.ts.map

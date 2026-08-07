@@ -7,6 +7,11 @@ export const recommend = asyncHandler(async (req, res) => {
     const result = await aiService.recommend(query);
     success(res, result);
 });
+export const areaPrice = asyncHandler(async (req, res) => {
+    const { query } = req.body;
+    const result = await aiService.areaPrice(query);
+    success(res, result);
+});
 export const findSimilar = asyncHandler(async (req, res) => {
     const listings = await aiService.findSimilar(param(req, "listingId"));
     success(res, listings);

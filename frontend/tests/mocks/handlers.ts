@@ -329,4 +329,54 @@ export const handlers = [
     mockReviews.splice(idx, 1)
     return HttpResponse.json({ success: true, data: { message: 'Review deleted' } })
   }),
+
+  http.post(`${BASE}/ai/recommend`, async ({ request }) => {
+    const body = (await request.json()) as { query: string }
+    const q = body.query.toLowerCase()
+    const area = mockListings.find((l) => q.includes(l.area.toLowerCase()))?.area
+    const results = area
+      ? mockListings.filter((l) => l.area.toLowerCase() === area.toLowerCase() && l.status === 'AVAILABLE')
+      : mockListings.filter((l) => l.status === 'AVAILABLE')
+    return HttpResponse.json({
+      success: true,
+      data: {
+        query: body.query,
+        parsedFilters: area ? { area } : {},
+        usedFallback: false,
+        results,
+        total: results.length,
+      },
+    })
+  }),
+
+  http.post(`${BASE}/ai/price`, async ({ request }) => {
+    const body = (await request.json()) as { query: string }
+    const q = body.query.toLowerCase()
+    const area = mockListings.find((l) => q.includes(l.area.toLowerCase()))?.area ?? 'Panchlaish'
+    const listings = mockListings.filter(
+      (l) => l.area.toLowerCase() === area.toLowerCase() && l.status === 'AVAILABLE'
+    )
+    const prices = listings.map((l) => l.price)
+    const cheapest = [...listings].sort((a, b) => a.price - b.price)
+    const bestReviewed = [...listings].sort((a, b) => {
+      const ratingOf = (id: string) => mockReviews.filter((r) => r.listingId === id).reduce((s, r) => s + r.rating, 0)
+      return ratingOf(b.id) - ratingOf(a.id)
+    })
+    return HttpResponse.json({
+      success: true,
+      data: {
+        query: body.query,
+        area,
+        summary: {
+          count: listings.length,
+          minPrice: prices.length ? Math.min(...prices) : null,
+          avgPrice: prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : null,
+          maxPrice: prices.length ? Math.max(...prices) : null,
+        },
+        cheapest,
+        bestReviewed,
+        insight: `Rents in ${area} currently range from ৳${Math.min(...prices)} to ৳${Math.max(...prices)} per month.`,
+      },
+    })
+  }),
 ]

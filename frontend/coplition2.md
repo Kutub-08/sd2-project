@@ -1,12 +1,12 @@
 # Completion Tracker — frontend vs planning2.md
 
-> Last updated: Aug 7, 2026 — after the **UI overhaul + AI integration + bug-solve** pass
-> (commit `Update-UI-AI-Integraion-bug-solve`). Build steps below match planning2.md §11.
+> Last updated: Aug 7, 2026 — after the **Reviews & Ratings feature** pass
+> (comment/rating on listings: `ReviewSection` on the details page, edit/delete own review, any authenticated user can review).
 
 | # | Build Step (from planning2.md §11) | Status | Notes |
 |---|--------------------------------------|--------|-------|
 | 1 | Vite + TS scaffold, Tailwind v4 + design tokens, routing skeleton | ✅ Done | Vite 8, React 19, TS 6, Tailwind v4, `@theme` ink/glass tokens in `index.css`, all routes in AppRouter.tsx |
-| 2 | Axios client + interceptors + typed API layer stubs | ✅ Done | `axiosClient.ts`, `interceptors.ts`, 6 API modules (missing `reviews.api.ts`) |
+| 2 | Axios client + interceptors + typed API layer stubs | ✅ Done | `axiosClient.ts`, `interceptors.ts`, 7 API modules (incl. `reviews.api.ts`) |
 | 3 | Auth pages (Login/Register) + Redux auth slice + ProtectedRoute | ✅ Done | LoginForm + RegisterForm with react-hook-form + Zod, `authSlice.ts`, `ProtectedRoute.tsx` |
 | 4 | Reusable UI components (`components/ui/`) + `styles/tokens.tsx` | ✅ Done | Button, Input, Select, Modal, Pagination, Skeleton, Badge, EmptyState, GlowDot, Toast; glass tokens + framer variants |
 | 5 | Listings browse page — grid ⇄ map toggle, FilterPanel, Pagination, TanStack Query | ✅ Done | ListingsPage with Grid/Map toggle (OpenStreetMap embed), FilterPanel, Pagination, SortDropdown, useListings |
@@ -16,9 +16,9 @@
 | 9 | Landlord inquiries received view | ✅ Done | ReceivedInquiriesPage |
 | 10 | New UI theme pass — Navbar/Footer/AppLayout, Home redesign | ✅ Done | Glass Navbar (scroll-aware), multi-column Footer, AppLayout ScrollProgress bar, Home = HeroSection + How It Works + Why To-Let + landlord CTA |
 | 11 | AI search page + AISearchBar + "understood as" chips + results | ✅ Done | AISearchPage (animated layout), AIResultsList (parsed-filter chips, "AI matched" / "Keyword results" badge), useAIRecommend |
-| 12 | Reviews (optional) | ❌ Not started | No review component, API module, hook, or schema |
+| 12 | Reviews (optional) | ✅ Done | `ReviewSection` + `ReviewForm` (create/edit/delete) + `RatingStars`; avg rating + count on detail; wired into ListingDetailsPage; any authenticated user can review (backend blocks self-review) |
 | 13 | Error boundaries, loading/empty states polish, responsive QA, reduced-motion | ✅ Partial | ErrorBoundary + EmptyState + Skeleton built; reduced-motion respected in hero; full QA still pending |
-| 14 | Tests (unit + integration with MSW) | ❌ Not started | No `tests/` dir, no MSW handlers, no test files |
+| 14 | Tests (unit + integration with MSW) | ✅ Done | 6 files / **35 tests**: authSlice, Pagination, loginFlow, listingsBrowse, createListing, reviews (MSW handlers for auth/listings/favorites/inquiries/reviews) |
 | 15 | Deployment config (env vars, Vercel setup) | ❌ Not started | Only `.env` with `VITE_API_BASE_URL`, no Vercel config |
 
 ## Missing from planned folder structure
@@ -27,11 +27,11 @@
 |------|--------|
 | `hooks/useAuth.ts` | ❌ (convenience wrapper not created) |
 | `features/auth/authSlice.test.ts` | ❌ |
-| `components/forms/ReviewForm.tsx` | ❌ |
-| `api/reviews.api.ts` | ❌ |
-| `hooks/queries/useReviews.ts` | ❌ |
-| `schemas/review.schema.ts` | ❌ |
-| `tests/` (entire directory) | ❌ |
+| `components/forms/ReviewForm.tsx` | ✅ (built at `components/reviews/ReviewForm.tsx` — reviews live under `components/reviews/`, off the planned `forms/` path) |
+| `api/reviews.api.ts` | ✅ created |
+| `hooks/queries/useReviews.ts` | ✅ created |
+| `schemas/review.schema.ts` | ✅ created |
+| `tests/` (entire directory) | ✅ exists — 6 test files, 35 tests |
 
 ## Extras (not in planning2.md)
 
@@ -50,6 +50,7 @@
 - **LandlordDashboard table** — stat cards (Total/Available/Rented/Inactive), responsive table with inline status `<select>` (via `useUpdateListing`) and view/edit/delete row actions
 - **AI search polish** — "Understood as" parsed-filter chips, "AI matched" vs "Keyword results" badges, `parsedFilters` rendering
 - **Listing details polish** — image lightbox (keyboard nav), hero gallery, mobile sticky inquiry bar
+- **Reviews & Ratings** — `components/reviews/` (`RatingStars`, `ReviewForm`, `ReviewSection`) placed on the listing details page; average rating + count header, comment list w/ read-only stars, create/edit/delete own review, sign-in prompt, form hidden for the listing's own landlord
 
 ### Other
 - `hooks/mutations/useUpdateInquiryStatus.ts`
