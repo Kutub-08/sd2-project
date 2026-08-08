@@ -280,7 +280,7 @@ GET    /api/users/:id/listings   (listings by a landlord user, 400 if not a land
 3. AI returns structured JSON (e.g. `{ maxPrice: 15000, bedrooms: 2, area: "IIUC" }`).
 4. Backend runs this as a normal Prisma filter query against `listings` (price ≤ maxPrice, bedrooms ≥ minBedrooms, area ILIKE match or geo-radius near IIUC's coordinates).
 5. Results ranked and returned — AI is used for **query understanding**, not for inventing listings; actual data always comes from PostgreSQL.
-6. Log the raw query + parsed filters to `ai_search_logs` (optional) to analyze common search patterns later.
+6. Log the raw query + parsed filters to `ai_search_logs` (implemented — every recommend call writes a row; logging failures are swallowed so they never break the response).
 
 **`GET /api/ai/similar/:listingId`** — given a listing, find others with close price range, same area, similar bedroom count (can be plain SQL similarity ranking, or AI-assisted embedding similarity if scope allows).
 

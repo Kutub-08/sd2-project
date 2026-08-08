@@ -1,5 +1,19 @@
 # To-Let — Completion Notes
 
+## What's Been Done (backend / SD2)
+
+The To-Let API backend is feature-complete against the core scope of planning.md. Highlights:
+
+- **Auth** — full JWT flow (15-min access + 7-day httpOnly refresh cookie, rotated on refresh), register with role, login/logout, `GET /me`, and **password reset** (forgot/reset with single-use hashed tokens).
+- **Listings** — full CRUD (landlord-owned), public browse with filters/pagination/sort, status patching, landlord listings, and Cloudinary **image upload/delete**.
+- **Favorites**, **Inquiries** (tenant→landlord contact, status tracking, per-tenant day limit), and **Reviews** (rating 1–5).
+- **Users** — public profile, self-update (via `isSelf`), landlord listings.
+- **AI recommend + similar** — natural-language → Gemini parse → structured Prisma query, with a content-aware `fallbackSearch` when AI fails.
+- **Prisma v7** multi-file schema (11 models) + 2 migrations; **seed script** with realistic sample data.
+- **Hardening** — helmet, CORS allowlist, global + per-route rate limiters (test no-op), `isOwner`/`isSelf` guards, centralized `AppError` handler, Winston logging, Swagger at `/api/docs`.
+
+---
+
 ## Project Setup
 - TypeScript/Express.js backend with ESM (`"type": "module"`)
 - `package.json` merged from old project template — name `to-let-backend`, description "Flat Rental Marketplace Backend"
@@ -118,6 +132,8 @@ Files: `ai.controller.ts`, `ai.service.ts`, `ai.routes.ts`, `ai.schema.ts`, `ai.
 **AI flow:** Gemini parses query → `ParsedFilters` (maxPrice, minBedrooms, area, amenities) → clamped → `buildWhereClause()` → Prisma query. Falls back to keyword search if AI fails/times out/returns empty.
 
 **`fallbackSearch.ts`** is content-aware: strips stop-words, parses price hints (`under/up to/৳Nk/taka` — `lte` for budget keywords, `equals` otherwise), detects bedroom counts from "2bhk"/"2 bed"/"2br" (structured field OR title), intersects keyword + bedroom + price constraints, capped at 20 results.
+
+**AI search logging (implemented):** every `/api/ai/recommend` call writes a row to `ai_search_logs` — `queryText` (raw query), `parsedFilters` (the clamped AI output as JsonB), and optional `userId` (when the caller is authenticated). Logging is fire-and-forget: failures are swallowed so they never affect the recommend response. Covered by integration tests (success path, fallback path).
 
 ## Middleware
 

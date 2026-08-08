@@ -4,22 +4,53 @@ import { Sparkles, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import AIResultsList from '../components/ai/AIResultsList'
 import { useAIRecommend } from '../hooks/queries/useAIRecommend'
+import type { AISortOption, AILocation } from '../api/ai.api'
 
 export default function AISearchPage() {
-  const { data, mutate, isPending } = useAIRecommend()
+  const { data, search, isPending } = useAIRecommend()
   const [input, setInput] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [sort, setSort] = useState<AISortOption>('relevance')
+  const [location, setLocation] = useState<AILocation | undefined>(undefined)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed) return
     setSubmitted(true)
-    mutate(trimmed, {
-      onError: () => {
-        toast.error("Couldn't understand that — showing keyword results instead")
-      },
-    })
+    setSort('relevance')
+    setLocation(undefined)
+    search(trimmed, 'relevance', undefined)
+  }
+
+  function handleSortChange(nextSort: AISortOption) {
+    if (!data) return
+    setSort(nextSort)
+
+    if (nextSort === 'nearest') {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+            setLocation(loc)
+            search(data.query, 'nearest', loc)
+          },
+          () => {
+            toast.error("Couldn't access your location — showing most relevant instead")
+            setSort('relevance')
+            search(data.query, 'relevance', undefined)
+          },
+          { timeout: 10000, maximumAge: 60000 },
+        )
+      } else {
+        toast.error("Geolocation isn't supported — showing most relevant instead")
+        setSort('relevance')
+        search(data.query, 'relevance', undefined)
+      }
+      return
+    }
+
+    search(data.query, nextSort, location)
   }
 
   return (
@@ -118,6 +149,8 @@ export default function AISearchPage() {
                   usedFallback={data?.usedFallback ?? false}
                   isLoading={isPending}
                   query={input}
+                  sort={sort}
+                  onSortChange={handleSortChange}
                   parsedFilters={data?.parsedFilters}
                 />
               </motion.div>

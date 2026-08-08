@@ -1,5 +1,5 @@
-import type { RecommendResult } from "./ai.types.js";
-export declare function recommend(query: string): Promise<RecommendResult>;
+import type { RecommendResult, SortOption, RecommendLocation } from "./ai.types.js";
+export declare function recommend(query: string, userId?: string | null, sort?: SortOption, location?: RecommendLocation): Promise<RecommendResult>;
 export declare function findSimilar(listingId: string): Promise<({
     landlord: {
         id: string;

@@ -22,6 +22,12 @@ const router = Router();
  *             required: [query]
  *             properties:
  *               query: { type: string, minLength: 3, example: "2 bed flat under 15000 in Panchlaish" }
+ *               sort: { type: string, enum: [relevance, price_asc, price_desc, highest_rated, most_reviewed, nearest], default: relevance }
+ *               location:
+ *                 type: object
+ *                 properties:
+ *                   lat: { type: number }
+ *                   lng: { type: number }
  *     responses:
  *       200:
  *         description: Recommended listings with parsed filters
@@ -33,6 +39,7 @@ const router = Router();
  *                 query: { type: string }
  *                 parsedFilters: { type: object }
  *                 usedFallback: { type: boolean }
+ *                 sort: { type: string }
  *                 results: { type: array }
  *                 total: { type: integer }
  *       429: { $ref: '#/components/schemas/Error' }
