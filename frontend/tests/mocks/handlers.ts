@@ -267,4 +267,44 @@ export const handlers = [
     inquiry.status = body.status as Inquiry['status']
     return HttpResponse.json({ success: true, data: inquiry })
   }),
+
+  // ─── AI Search ───
+
+  http.post(`${BASE}/ai/recommend`, async ({ request }) => {
+    const body = (await request.json()) as { query: string; sort?: string; location?: { lat: number; lng: number } }
+    const sort = body.sort ?? 'relevance'
+
+    let results = [...mockListings.filter((l) => l.status === 'AVAILABLE')]
+    if (sort === 'price_asc') results.sort((a, b) => a.price - b.price)
+    else if (sort === 'price_desc') results.sort((a, b) => b.price - a.price)
+    else if (sort === 'highest_rated') results.sort((a, b) => (b.price > a.price ? 1 : -1))
+    else if (sort === 'most_reviewed') results.sort((a, b) => b.price - a.price)
+    else if (sort === 'nearest' && body.location) {
+      results.sort(
+        (a, b) =>
+          Math.abs(Number(a.lat) - body.location!.lat) +
+          Math.abs(Number(a.lng) - body.location!.lng) -
+          (Math.abs(Number(b.lat) - body.location!.lat) + Math.abs(Number(b.lng) - body.location!.lng)),
+      )
+    } else {
+      results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    }
+
+    const parsedFilters: Record<string, unknown> = {}
+    if (/khulshi/i.test(body.query)) parsedFilters.area = 'Khulshi'
+    if (/under (\d+)/i.test(body.query)) parsedFilters.maxPrice = Number(body.query.match(/under (\d+)/i)?.[1])
+    if (/(\d+)\s*bed/i.test(body.query)) parsedFilters.minBedrooms = Number(body.query.match(/(\d+)\s*bed/i)?.[1])
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        query: body.query,
+        parsedFilters,
+        usedFallback: false,
+        sort,
+        results,
+        total: results.length,
+      },
+    })
+  }),
 ]

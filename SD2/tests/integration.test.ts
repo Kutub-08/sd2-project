@@ -3,13 +3,15 @@ import { beforeAll, afterAll, beforeEach, it, expect, jest, describe } from "@je
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let request: any, app: any, prisma: any, clearDatabase: any, seedUsers: any, seedListings: any, setTokens: any, getAccessToken: any;
 
-const mockGenerateContent = jest.fn<() => Promise<unknown>>();
+const mockCreateCompletion = jest.fn<() => Promise<unknown>>();
 
-jest.unstable_mockModule("@google/generative-ai", () => ({
-  GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-    getGenerativeModel: jest.fn().mockReturnValue({
-      generateContent: mockGenerateContent,
-    }),
+jest.unstable_mockModule("groq-sdk", () => ({
+  default: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: mockCreateCompletion,
+      },
+    },
   })),
 }));
 
@@ -560,15 +562,13 @@ describe("Inquiries", () => {
 
 describe("AI Recommend", () => {
   beforeEach(() => {
-    mockGenerateContent.mockReset();
+    mockCreateCompletion.mockReset();
   });
 
   it("POST /api/ai/recommend — success path with parsed filters", async () => {
-    mockGenerateContent.mockResolvedValue({
-      response: {
-        text: () => '{"maxPrice": 15000, "minBedrooms": 2, "area": "Panchlaish"}',
-      },
-    } satisfies { response: { text: () => string } });
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"maxPrice": 15000, "minBedrooms": 2, "area": "Panchlaish"}' } }],
+    });
 
     const res = await request(app)
       .post("/api/ai/recommend")
@@ -579,13 +579,50 @@ describe("AI Recommend", () => {
     expect(res.body.data.parsedFilters.maxPrice).toBe(15000);
     expect(res.body.data.parsedFilters.minBedrooms).toBe(2);
     expect(res.body.data.parsedFilters.area).toBe("Panchlaish");
+    expect(res.body.data.sort).toBe("relevance");
     expect(res.body.data.usedFallback).toBe(false);
     expect(res.body.data.results.length).toBeGreaterThanOrEqual(1);
     expect(res.body.data.total).toBeGreaterThanOrEqual(1);
   });
 
-  it("POST /api/ai/recommend — Gemini failure triggers fallback", async () => {
-    mockGenerateContent.mockRejectedValue(new Error("Gemini API error"));
+  it("POST /api/ai/recommend — writes a row to ai_search_logs", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"maxPrice": 15000, "minBedrooms": 2, "area": "Panchlaish"}' } }],
+    });
+
+    const query = "3 bed flat in Khulshi under 25000";
+    await request(app).post("/api/ai/recommend").send({ query }).expect(200);
+
+    const log = await prisma.aiSearchLog.findFirst({
+      where: { queryText: query },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(log).toBeDefined();
+    expect(log?.parsedFilters).toMatchObject({
+      maxPrice: 15000,
+      minBedrooms: 2,
+      area: "Panchlaish",
+    });
+  });
+
+  it("POST /api/ai/recommend — logs a row even when the LLM fails (fallback)", async () => {
+    mockCreateCompletion.mockRejectedValue(new Error("Groq API error"));
+
+    const query = "affordable flat in Chattogram";
+    await request(app)
+      .post("/api/ai/recommend")
+      .send({ query })
+      .expect(200);
+
+    const log = await prisma.aiSearchLog.findFirst({
+      where: { queryText: query },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(log).toBeDefined();
+  });
+
+  it("POST /api/ai/recommend — LLM failure triggers fallback", async () => {
+    mockCreateCompletion.mockRejectedValue(new Error("Groq API error"));
 
     const res = await request(app)
       .post("/api/ai/recommend")
@@ -603,5 +640,136 @@ describe("AI Recommend", () => {
       .expect(400);
 
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("POST /api/ai/recommend — price_asc sorts cheapest first", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({ query: "flats over 5000 taka", sort: "price_asc" })
+      .expect(200);
+
+    const prices = res.body.data.results.map((l: any) => Number(l.price));
+    expect(prices.length).toBeGreaterThanOrEqual(2);
+    expect(prices[0]).toBeLessThanOrEqual(prices[prices.length - 1]);
+    expect([...prices].sort((a: number, b: number) => a - b)).toEqual(prices);
+  });
+
+  it("POST /api/ai/recommend — price_desc sorts most expensive first", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({ query: "flats over 5000 taka", sort: "price_desc" })
+      .expect(200);
+
+    const prices = res.body.data.results.map((l: any) => Number(l.price));
+    expect(prices.length).toBeGreaterThanOrEqual(2);
+    expect([...prices].sort((a: number, b: number) => b - a)).toEqual(prices);
+  });
+
+  it("POST /api/ai/recommend — highest_rated puts 5-star listing first", async () => {
+    await prisma.review.deleteMany();
+    await prisma.review.create({ data: { listingId: listings.l1.id, tenantId: users.tenant1.id, rating: 5, comment: "Great" } });
+    await prisma.review.create({ data: { listingId: listings.l2.id, tenantId: users.tenant2.id, rating: 3, comment: "OK" } });
+
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({ query: "flats over 5000 taka", sort: "highest_rated" })
+      .expect(200);
+
+    expect(res.body.data.results.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.data.results[0].id).toBe(listings.l1.id);
+    await prisma.review.deleteMany();
+  });
+
+  it("POST /api/ai/recommend — most_reviewed puts heavily-reviewed listing first", async () => {
+    await prisma.review.deleteMany();
+    await prisma.review.create({ data: { listingId: listings.l1.id, tenantId: users.tenant1.id, rating: 5, comment: "Great" } });
+    await prisma.review.create({ data: { listingId: listings.l1.id, tenantId: users.tenant2.id, rating: 4, comment: "Nice" } });
+    await prisma.review.create({ data: { listingId: listings.l2.id, tenantId: users.tenant1.id, rating: 4, comment: "Good" } });
+
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({ query: "flats over 5000 taka", sort: "most_reviewed" })
+      .expect(200);
+
+    expect(res.body.data.results.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.data.results[0].id).toBe(listings.l1.id);
+    await prisma.review.deleteMany();
+  });
+
+  it("POST /api/ai/recommend — nearest sorts by distance to provided location", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({
+        query: "flats over 5000 taka",
+        sort: "nearest",
+        location: { lat: 22.3852, lng: 91.8115 },
+      })
+      .expect(200);
+
+    expect(res.body.data.results.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.results[0].id).toBe(listings.l2.id);
+  });
+
+  it("POST /api/ai/recommend — nearest without location is rejected (400)", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({ query: "flats over 5000 taka", sort: "nearest" })
+      .expect(400);
+
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("POST /api/ai/recommend — empty results return total 0 (no fallback)", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"area": "NowherePlaceXYZ"}' } }],
+    });
+
+    const res = await request(app)
+      .post("/api/ai/recommend")
+      .send({ query: "flat in NowherePlaceXYZ" })
+      .expect(200);
+
+    expect(res.body.data.usedFallback).toBe(false);
+    expect(res.body.data.total).toBe(0);
+    expect(res.body.data.results.length).toBe(0);
+  });
+
+  it("POST /api/ai/recommend — cached parse avoids a second LLM call on sort change", async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [{ message: { content: '{"minPrice": 5000}' } }],
+    });
+
+    const query = "flats priced over 5000 taka in Chattogram";
+    await request(app).post("/api/ai/recommend").send({ query }).expect(200);
+    await request(app)
+      .post("/api/ai/recommend")
+      .send({ query, sort: "price_desc" })
+      .expect(200);
+
+    expect(mockCreateCompletion).toHaveBeenCalledTimes(1);
   });
 });

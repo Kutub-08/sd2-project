@@ -3,6 +3,21 @@
 > Last updated: Aug 7, 2026 — after the **UI overhaul + AI integration + bug-solve** pass
 > (commit `Update-UI-AI-Integraion-bug-solve`). Build steps below match planning2.md §11.
 
+## What's Been Done (frontend)
+
+The To-Let React frontend is feature-complete against the core scope of planning2.md. Highlights:
+
+- **Stack** — React 19 + Vite 8 + TypeScript, React Router v7, Redux Toolkit (auth/UI), TanStack Query (server state), Tailwind v4 design tokens.
+- **Full dark "ink glassmorphism" UI theme** — `@theme` tokens in `index.css`, centralized class tokens + framer-motion variants in `styles/tokens.tsx`, mobile-first responsive throughout.
+- **Auth** — Login/Register forms (react-hook-form + Zod) + Redux auth slice + role-aware `ProtectedRoute`.
+- **Home/landing** — animated `HeroSection` (parallax blobs, count-up stats, area autocomplete, budget search), How-It-Works, Why To-Let, landlord CTA.
+- **Browse & detail** — ListingsPage with grid ⇄ **map toggle** (OpenStreetMap embed), FilterPanel synced to URL, pagination; ListingDetailsPage with hero gallery + image lightbox + inquiry form + similar flats + mobile inquiry bar.
+- **Dashboards** — landlord stats + inline status table, create/edit listing (react-dropzone image upload); tenant favorites + sent inquiries; dashboard sidebar layout.
+- **AI Search** — `/ai-search` with animated layout, "Understood as" parsed-filter chips, "AI matched" vs "Keyword results" badges, fallback toast.
+- **Polish** — ErrorBoundary, EmptyStates, Skeleton loaders, sonner Toasts, scroll-progress bar, `prefers-reduced-motion` support.
+
+---
+
 | # | Build Step (from planning2.md §11) | Status | Notes |
 |---|--------------------------------------|--------|-------|
 | 1 | Vite + TS scaffold, Tailwind v4 + design tokens, routing skeleton | ✅ Done | Vite 8, React 19, TS 6, Tailwind v4, `@theme` ink/glass tokens in `index.css`, all routes in AppRouter.tsx |

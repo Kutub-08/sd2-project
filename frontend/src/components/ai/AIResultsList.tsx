@@ -2,8 +2,9 @@ import { Sparkles, BadgeCheck, Wallet, MapPin, DoorOpen } from 'lucide-react'
 import ListingGrid from '../listings/ListingGrid'
 import Skeleton from '../ui/Skeleton'
 import EmptyState from '../ui/EmptyState'
+import AISortDropdown from './AISortDropdown'
 import type { Listing } from '../../types/listing.types'
-import type { RecommendResult } from '../../api/ai.api'
+import type { RecommendResult, AISortOption } from '../../api/ai.api'
 
 type Props = {
   results: Listing[]
@@ -11,6 +12,8 @@ type Props = {
   usedFallback: boolean
   isLoading: boolean
   query: string
+  sort: AISortOption
+  onSortChange: (sort: AISortOption) => void
   parsedFilters?: RecommendResult['parsedFilters']
 }
 
@@ -43,6 +46,8 @@ function FilterChip({ icon, label }: { icon: React.ReactNode; label: string }) {
 function ParsedChips({ parsedFilters }: { parsedFilters?: RecommendResult['parsedFilters'] }) {
   const chips: { icon: React.ReactNode; label: string }[] = []
   if (!parsedFilters) return null
+  if (parsedFilters.minPrice !== undefined)
+    chips.push({ icon: <Wallet className="h-3.5 w-3.5" />, label: `min ৳${parsedFilters.minPrice.toLocaleString()}/mo` })
   if (parsedFilters.maxPrice !== undefined)
     chips.push({ icon: <Wallet className="h-3.5 w-3.5" />, label: `max ৳${parsedFilters.maxPrice.toLocaleString()}/mo` })
   if (parsedFilters.minBedrooms !== undefined)
@@ -68,7 +73,16 @@ function ParsedChips({ parsedFilters }: { parsedFilters?: RecommendResult['parse
   )
 }
 
-export default function AIResultsList({ results, total, usedFallback, isLoading, query, parsedFilters }: Props) {
+export default function AIResultsList({
+  results,
+  total,
+  usedFallback,
+  isLoading,
+  query,
+  sort,
+  onSortChange,
+  parsedFilters,
+}: Props) {
   if (isLoading) {
     return (
       <div>
@@ -84,8 +98,8 @@ export default function AIResultsList({ results, total, usedFallback, isLoading,
     return (
       <EmptyState
         icon={<Sparkles className="h-10 w-10" />}
-        title="No flats matched that"
-        description="Try a different search, like “2 bed flat under 15k near Bashundhara”"
+        title="No properties found matching your criteria."
+        description="Try adjusting the location, price range, or search terms in your query."
       />
     )
   }
@@ -93,7 +107,7 @@ export default function AIResultsList({ results, total, usedFallback, isLoading,
   return (
     <div>
       <ParsedChips parsedFilters={parsedFilters} />
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <p className="text-sm text-mist">
           Found {total} result{total !== 1 ? 's' : ''} for &quot;{query}&quot;
         </p>
@@ -106,6 +120,9 @@ export default function AIResultsList({ results, total, usedFallback, isLoading,
             AI matched
           </span>
         )}
+        <div className="ml-auto">
+          <AISortDropdown sort={sort} onChange={onSortChange} />
+        </div>
       </div>
       <ListingGrid listings={results} />
     </div>

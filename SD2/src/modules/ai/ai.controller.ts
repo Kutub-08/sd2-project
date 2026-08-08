@@ -5,8 +5,8 @@ import { param } from "../../utils/param.js";
 import * as aiService from "./ai.service.js";
 
 export const recommend = asyncHandler(async (req: Request, res: Response) => {
-  const { query } = req.body;
-  const result = await aiService.recommend(query);
+  const { query, sort, location } = req.body;
+  const result = await aiService.recommend(query, req.user?.id ?? null, sort, location);
   success(res, result);
 });
 

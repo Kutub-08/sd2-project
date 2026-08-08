@@ -173,7 +173,6 @@ export default function HeroSection() {
       e.preventDefault()
       setActiveS((p) => (p - 1 + suggestionsList.length) % suggestionsList.length)
     } else if (e.key === 'Enter' && suggestionsList[activeS]) {
-      e.preventDefault()
       pickSuggestion(suggestionsList[activeS])
     } else if (e.key === 'Escape') {
       setSuggestions(false)
@@ -193,15 +192,15 @@ export default function HeroSection() {
   function handleSearch(e: FormEvent) {
     e.preventDefault()
     if (searching) return
-    if (suggestionsList.length && suggestionsList[activeS]) {
-      pickSuggestion(suggestionsList[activeS])
-      return
-    }
+    const searchArea =
+      suggestionsList.length && suggestionsList[activeS] ? suggestionsList[activeS] : area
+    setArea(searchArea)
+    setSuggestions(false)
     setSearching(true)
     // simulate the network + framer transition, ~600ms, then go
     setTimeout(() => {
       const params = new URLSearchParams()
-      if (area.trim()) params.set('area', area.trim())
+      if (searchArea.trim()) params.set('area', searchArea.trim())
       const rawPrice = priceText.replace(/,/g, '')
       if (rawPrice) params.set('maxPrice', rawPrice)
       navigate(`/listings?${params.toString()}`)
