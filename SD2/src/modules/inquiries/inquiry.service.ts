@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { getSkipTake, getPaginationMeta } from "../../utils/pagination.js";
 
 const DAILY_LIMIT = 5;
 
@@ -47,13 +48,12 @@ export async function findSent(tenantId: string, page: number, limit: number) {
       where,
       include: inquiryInclude,
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
+      ...getSkipTake(page, limit),
     }),
     prisma.inquiry.count({ where }),
   ]);
 
-  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  return { items, ...getPaginationMeta(total, page, limit) };
 }
 
 export async function findReceived(landlordId: string, page: number, limit: number) {
@@ -71,13 +71,12 @@ export async function findReceived(landlordId: string, page: number, limit: numb
         },
       },
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
+      ...getSkipTake(page, limit),
     }),
     prisma.inquiry.count({ where }),
   ]);
 
-  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  return { items, ...getPaginationMeta(total, page, limit) };
 }
 
 export async function updateStatus(inquiryId: string, landlordId: string, status: "PENDING" | "RESPONDED" | "CLOSED") {

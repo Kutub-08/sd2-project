@@ -5,8 +5,8 @@ export declare function updateUser(id: string, data: {
     phone?: string;
 }): Promise<{
     id: string;
-    name: string;
     email: string;
+    name: string;
     phone: string;
     role: import("../../../generated/prisma/enums.js").UserRole;
     createdAt: Date;
@@ -32,8 +32,8 @@ export declare function getUserListings(userId: string): Promise<({
     address: string;
     area: string;
     city: string;
-    latitude: import("@prisma/client-runtime-utils").Decimal;
-    longitude: import("@prisma/client-runtime-utils").Decimal;
+    latitude: import("@prisma/client-runtime-utils").Decimal | null;
+    longitude: import("@prisma/client-runtime-utils").Decimal | null;
     amenities: string[];
     status: import("../../../generated/prisma/enums.js").ListingStatus;
 })[]>;

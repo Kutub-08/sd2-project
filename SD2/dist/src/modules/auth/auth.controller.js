@@ -56,4 +56,12 @@ export const getMe = asyncHandler(async (req, res) => {
     const user = await authService.getMe(req.user.id);
     success(res, user);
 });
+export const requestVerification = asyncHandler(async (req, res) => {
+    const result = await authService.requestVerification(req.user.id);
+    success(res, result);
+});
+export const verifyEmail = asyncHandler(async (req, res) => {
+    const user = await authService.verifyEmail(req.user.id, req.body.code);
+    success(res, user);
+});
 //# sourceMappingURL=auth.controller.js.map

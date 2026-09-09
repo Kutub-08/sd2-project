@@ -7,6 +7,7 @@ import inquiryRoutes from "../modules/inquiries/inquiry.routes.js";
 import aiRoutes from "../modules/ai/ai.routes.js";
 import reviewRoutes from "../modules/reviews/review.routes.js";
 import userRoutes from "../modules/users/user.routes.js";
+import adminRoutes from "../modules/admin/admin.routes.js";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/inquiries", inquiryRoutes);
 router.use("/ai", aiRoutes);
 router.use("/users", userRoutes);
 router.use("/reviews", reviewRoutes);
+router.use("/admin", adminRoutes);
 
 export default router;

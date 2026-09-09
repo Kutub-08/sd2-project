@@ -20,6 +20,7 @@ export declare const ModelName: {
     readonly RefreshToken: "RefreshToken";
     readonly Review: "Review";
     readonly User: "User";
+    readonly VerificationCode: "VerificationCode";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export declare const TransactionIsolationLevel: {
@@ -115,10 +116,21 @@ export declare const UserScalarFieldEnum: {
     readonly passwordHash: "passwordHash";
     readonly role: "role";
     readonly isVerified: "isVerified";
+    readonly isBanned: "isBanned";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+export declare const VerificationCodeScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly codeHash: "codeHash";
+    readonly expiresAt: "expiresAt";
+    readonly usedAt: "usedAt";
+    readonly attempts: "attempts";
+    readonly createdAt: "createdAt";
+};
+export type VerificationCodeScalarFieldEnum = (typeof VerificationCodeScalarFieldEnum)[keyof typeof VerificationCodeScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: "asc";
     readonly desc: "desc";

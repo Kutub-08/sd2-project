@@ -6,6 +6,7 @@ model User {
   passwordHash String   @map("password_hash")
   role         UserRole @default(TENANT)
   isVerified   Boolean  @default(false) @map("is_verified")
+  isBanned     Boolean  @default(false) @map("is_banned")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -16,6 +17,7 @@ model User {
   reviews            Review[]             @relation("TenantReviews")
   aiSearchLogs       AiSearchLog[]
   passwordResetTokens PasswordResetToken[]
+  verificationCodes   VerificationCode[]
 
   @@map("users")
 }

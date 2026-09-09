@@ -2,8 +2,8 @@ export declare function create(userId: string, listingId: string): Promise<{
     listing: {
         landlord: {
             id: string;
-            name: string;
             email: string;
+            name: string;
             phone: string;
         };
     } & {
@@ -21,24 +21,28 @@ export declare function create(userId: string, listingId: string): Promise<{
         address: string;
         area: string;
         city: string;
-        latitude: import("@prisma/client-runtime-utils").Decimal;
-        longitude: import("@prisma/client-runtime-utils").Decimal;
+        latitude: import("@prisma/client-runtime-utils").Decimal | null;
+        longitude: import("@prisma/client-runtime-utils").Decimal | null;
         amenities: string[];
         status: import("../../../generated/prisma/enums.js").ListingStatus;
     };
 } & {
     id: string;
-    userId: string;
     createdAt: Date;
+    userId: string;
     listingId: string;
 }>;
 export declare function findAll(userId: string, page: number, limit: number): Promise<{
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
     items: ({
         listing: {
             landlord: {
                 id: string;
-                name: string;
                 email: string;
+                name: string;
                 phone: string;
             };
         } & {
@@ -56,21 +60,17 @@ export declare function findAll(userId: string, page: number, limit: number): Pr
             address: string;
             area: string;
             city: string;
-            latitude: import("@prisma/client-runtime-utils").Decimal;
-            longitude: import("@prisma/client-runtime-utils").Decimal;
+            latitude: import("@prisma/client-runtime-utils").Decimal | null;
+            longitude: import("@prisma/client-runtime-utils").Decimal | null;
             amenities: string[];
             status: import("../../../generated/prisma/enums.js").ListingStatus;
         };
     } & {
         id: string;
-        userId: string;
         createdAt: Date;
+        userId: string;
         listingId: string;
     })[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
 }>;
 export declare function remove(userId: string, id: string): Promise<void>;
 //# sourceMappingURL=favorite.service.d.ts.map

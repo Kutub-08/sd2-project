@@ -17,7 +17,8 @@ export const ModelName = {
     PasswordResetToken: 'PasswordResetToken',
     RefreshToken: 'RefreshToken',
     Review: 'Review',
-    User: 'User'
+    User: 'User',
+    VerificationCode: 'VerificationCode'
 };
 export const TransactionIsolationLevel = runtime.makeStrictEnum({
     ReadUncommitted: 'ReadUncommitted',
@@ -103,8 +104,18 @@ export const UserScalarFieldEnum = {
     passwordHash: 'passwordHash',
     role: 'role',
     isVerified: 'isVerified',
+    isBanned: 'isBanned',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
+};
+export const VerificationCodeScalarFieldEnum = {
+    id: 'id',
+    userId: 'userId',
+    codeHash: 'codeHash',
+    expiresAt: 'expiresAt',
+    usedAt: 'usedAt',
+    attempts: 'attempts',
+    createdAt: 'createdAt'
 };
 export const SortOrder = {
     asc: 'asc',

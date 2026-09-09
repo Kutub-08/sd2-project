@@ -33,6 +33,7 @@ export async function clearDatabase() {
   await prisma.listing.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.passwordResetToken.deleteMany();
+  await prisma.verificationCode.deleteMany();
   await prisma.aiSearchLog.deleteMany();
   await prisma.user.deleteMany();
 }

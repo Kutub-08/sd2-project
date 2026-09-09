@@ -72,3 +72,13 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
   const user = await authService.getMe(req.user!.id);
   success(res, user);
 });
+
+export const requestVerification = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.requestVerification(req.user!.id);
+  success(res, result);
+});
+
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+  const user = await authService.verifyEmail(req.user!.id, req.body.code);
+  success(res, user);
+});

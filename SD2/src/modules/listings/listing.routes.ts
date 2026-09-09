@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
-import { authenticate, authorize } from "../../middleware/auth.js";
+import { authenticate, authorize, requireVerified } from "../../middleware/auth.js";
 import { isOwner } from "../../middleware/isOwner.js";
 import {
   createListingSchema,
@@ -112,7 +112,7 @@ router.get("/", validate(listingQuerySchema, "query"), listingController.findAll
  *       400: { $ref: '#/components/schemas/Error' }
  *       403: { $ref: '#/components/schemas/Error' }
  */
-router.post("/", authenticate, authorize("LANDLORD"), validate(createListingSchema), listingController.create);
+router.post("/", authenticate, authorize("LANDLORD"), requireVerified, validate(createListingSchema), listingController.create);
 
 /**
  * @swagger

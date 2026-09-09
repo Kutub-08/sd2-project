@@ -8,6 +8,8 @@ import { configureStore } from '@reduxjs/toolkit'
 import authReducer from '../src/features/auth/authSlice'
 import uiReducer from '../src/features/ui/uiSlice'
 import ListingsPage from '../src/pages/ListingsPage'
+import { renderWithProviders } from './testUtils'
+import type { RootState } from '../src/app/store'
 
 function setup(initialEntries = ['/listings']) {
   const store = configureStore({
@@ -33,7 +35,7 @@ function setup(initialEntries = ['/listings']) {
 describe('Listings browse + filter', () => {
   it('renders the listings page heading', () => {
     setup()
-    expect(screen.getByText('Listings')).toBeInTheDocument()
+    expect(screen.getByText('Available flats in Bangladesh')).toBeInTheDocument()
   })
 
   it('displays listings from the API', async () => {
@@ -56,7 +58,7 @@ describe('Listings browse + filter', () => {
 
     await screen.findByText('Modern 2BR in Panchlaish')
 
-    const areaInput = screen.getByPlaceholderText('e.g. Gulshan')
+    const areaInput = screen.getByPlaceholderText('e.g. Bashundhara')
     await user.type(areaInput, 'Khulshi')
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
@@ -87,7 +89,7 @@ describe('Listings browse + filter', () => {
 
     await screen.findByText('Modern 2BR in Panchlaish')
 
-    const areaInput = screen.getByPlaceholderText('e.g. Gulshan')
+    const areaInput = screen.getByPlaceholderText('e.g. Bashundhara')
     await user.type(areaInput, 'Panchlaish')
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
@@ -124,12 +126,48 @@ describe('Listings browse + filter', () => {
 
     await screen.findByText('Modern 2BR in Panchlaish')
 
-    const areaInput = screen.getByPlaceholderText('e.g. Gulshan')
+    const areaInput = screen.getByPlaceholderText('e.g. Bashundhara')
     await user.type(areaInput, 'NonExistentAreaXYZ')
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
     await vi.waitFor(() => {
-      expect(screen.getByText('No listings match your filters')).toBeInTheDocument()
+      expect(screen.getByText('No flats match your filters')).toBeInTheDocument()
     })
+  })
+
+  it('lets a tenant favorite and unfavorite a listing from the browse page', async () => {
+    const user = userEvent.setup()
+    const preloadedState: Partial<RootState> = {
+      auth: {
+        user: {
+          id: 'tenant1',
+          name: 'Test Tenant',
+          email: 'tenant@test.com',
+          phone: '01733',
+          role: 'TENANT',
+          isVerified: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        accessToken: 'test-access-token',
+        isAuthenticated: true,
+        role: 'TENANT',
+      },
+    }
+    renderWithProviders(<ListingsPage />, { preloadedState })
+
+    await screen.findByText('Modern 2BR in Panchlaish')
+
+    const favButtons = screen.getAllByRole('button', { name: 'Add to favorites' })
+    expect(favButtons.length).toBeGreaterThan(0)
+
+    await user.click(favButtons[0])
+    expect(await screen.findByRole('button', { name: 'Remove from favorites' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Remove from favorites' }))
+    await vi.waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Remove from favorites' })).not.toBeInTheDocument()
+    })
+    expect(screen.getAllByRole('button', { name: 'Add to favorites' })).toHaveLength(favButtons.length)
   })
 })

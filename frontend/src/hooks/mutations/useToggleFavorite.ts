@@ -7,10 +7,12 @@ type ToggleVars = {
   favoriteId?: string
 }
 
+type FavoritesSnapshot = Array<[readonly unknown[], unknown]>
+
 export function useToggleFavorite() {
   const queryClient = useQueryClient()
 
-  return useMutation<unknown, Error, ToggleVars, { previous: unknown }>({
+  return useMutation<unknown, Error, ToggleVars, { previous: FavoritesSnapshot }>({
     mutationFn: (vars: ToggleVars) => {
       if (vars.isFavorited && vars.favoriteId) {
         return removeFavorite(vars.favoriteId)
@@ -18,20 +20,26 @@ export function useToggleFavorite() {
       return addFavorite(vars.listingId)
     },
 
-    onMutate: async (_vars: ToggleVars) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['favorites'] })
-      const previous = queryClient.getQueryData(['favorites'])
+      const previous: FavoritesSnapshot = queryClient.getQueriesData({ queryKey: ['favorites'] })
       return { previous }
     },
 
     onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['favorites'], context.previous)
+      if (context?.previous?.length) {
+        for (const [key, value] of context.previous) {
+          queryClient.setQueryData(key, value)
+        }
       }
     },
 
-    onSettled: () => {
+    onSettled: (_data, _err, vars) => {
       queryClient.invalidateQueries({ queryKey: ['favorites'] })
+      queryClient.invalidateQueries({ queryKey: ['listings'] })
+      if (vars.listingId) {
+        queryClient.invalidateQueries({ queryKey: ['listing', vars.listingId] })
+      }
     },
   })
 }

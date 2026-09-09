@@ -6,6 +6,8 @@ import { success, fail } from "../../src/utils/apiResponse.js";
 import { param } from "../../src/utils/param.js";
 import { AppError } from "../../src/utils/AppError.js";
 import { hashPassword, comparePassword, hashToken } from "../../src/utils/hash.js";
+import { getPagination, getSkipTake, getPaginationMeta } from "../../src/utils/pagination.js";
+import { sendPasswordResetEmail } from "../../src/config/mailer.js";
 
 describe("jwt", () => {
   const payload = { userId: "user-1", role: "TENANT" };
@@ -140,5 +142,57 @@ describe("hash", () => {
     const a = hashToken("same-token");
     const b = hashToken("same-token");
     expect(a).toBe(b);
+  });
+});
+
+describe("pagination", () => {
+  it("getPagination defaults to page 1 and limit 20", () => {
+    expect(getPagination()).toEqual({ page: 1, limit: 20 });
+  });
+
+  it("getPagination parses string values", () => {
+    expect(getPagination("3", "15")).toEqual({ page: 3, limit: 15 });
+  });
+
+  it("getPagination clamps limit to maxLimit (100)", () => {
+    expect(getPagination("1", "500")).toEqual({ page: 1, limit: 100 });
+  });
+
+  it("getPagination floors non-integer values", () => {
+    expect(getPagination("2.9", "7.8")).toEqual({ page: 2, limit: 7 });
+  });
+
+  it("getPagination falls back to defaults for invalid input", () => {
+    expect(getPagination("abc", "-5")).toEqual({ page: 1, limit: 20 });
+    expect(getPagination("0", "0")).toEqual({ page: 1, limit: 20 });
+    expect(getPagination(null, undefined)).toEqual({ page: 1, limit: 20 });
+  });
+
+  it("getPagination supports custom defaults", () => {
+    expect(getPagination(undefined, undefined, { defaultLimit: 10, maxLimit: 50 })).toEqual({
+      page: 1,
+      limit: 10,
+    });
+    expect(getPagination(1, 1000, { maxLimit: 50 })).toEqual({ page: 1, limit: 50 });
+  });
+
+  it("getSkipTake computes offset and take", () => {
+    expect(getSkipTake(1, 20)).toEqual({ skip: 0, take: 20 });
+    expect(getSkipTake(3, 10)).toEqual({ skip: 20, take: 10 });
+  });
+
+  it("getPaginationMeta builds page metadata", () => {
+    expect(getPaginationMeta(57, 3, 20)).toEqual({ total: 57, page: 3, limit: 20, totalPages: 3 });
+    expect(getPaginationMeta(0, 1, 20)).toEqual({ total: 0, page: 1, limit: 20, totalPages: 0 });
+  });
+});
+
+describe("mailer", () => {
+  it("sendPasswordResetEmail falls back (returns false) when SMTP is not configured", async () => {
+    const result = await sendPasswordResetEmail(
+      "test@example.com",
+      "http://localhost:3000/reset-password?token=abc",
+    );
+    expect(result).toBe(false);
   });
 });

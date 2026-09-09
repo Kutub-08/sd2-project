@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom'
+import { isAxiosError } from 'axios'
 import { toast } from 'sonner'
 import ListingForm from '../../components/forms/ListingForm'
 import { useCreateListing } from '../../hooks/mutations/useCreateListing'
 import { useUploadListingImage } from '../../hooks/mutations/useUploadListingImage'
 import type { CreateListingInput } from '../../schemas/listing.schema'
+import type { ApiError } from '../../types/api.types'
 
 export default function CreateListingPage() {
   const navigate = useNavigate()
@@ -38,7 +40,12 @@ export default function CreateListingPage() {
           navigate('/landlord/dashboard')
         }
       },
-      onError: () => {
+      onError: (err: unknown) => {
+        if (isAxiosError<ApiError>(err) && err.response?.data?.error?.code === 'EMAIL_NOT_VERIFIED') {
+          toast.info('Verify your email to publish a listing')
+          navigate('/verify-email')
+          return
+        }
         toast.error('Failed to create listing')
       },
     })

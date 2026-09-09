@@ -97,11 +97,11 @@ export default function Navbar() {
               <span className="hidden text-xs text-mist sm:block">
                 {user.name}{' '}
                 <span className="text-mist/60">
-                  ({user.role === 'LANDLORD' ? 'Landlord' : 'Tenant'})
+                  ({user.role === 'LANDLORD' ? 'Landlord' : user.role === 'ADMIN' ? 'Admin' : 'Tenant'})
                 </span>
               </span>
               <Link
-                to={user.role === 'LANDLORD' ? '/landlord/dashboard' : '/dashboard'}
+                to={user.role === 'LANDLORD' ? '/landlord/dashboard' : user.role === 'ADMIN' ? '/admin' : '/dashboard'}
                 className="group/cta relative rounded-full border border-line px-4 py-1.5 text-sm text-paper transition-all duration-300 ease-out hover:border-teal/50 hover:text-teal focus-visible:ring-2 focus-visible:ring-teal/60 focus-visible:outline-none"
               >
                 <span

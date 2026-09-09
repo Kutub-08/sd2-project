@@ -12,11 +12,15 @@ import {
   Maximize,
   ShieldCheck,
   Expand,
+  Heart,
 } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { useListing } from '../hooks/queries/useListing'
 import { useListings } from '../hooks/queries/useListings'
+import { useFavoriteIds } from '../hooks/queries/useFavoriteIds'
+import { useToggleFavorite } from '../hooks/mutations/useToggleFavorite'
 import InquiryForm from '../components/forms/InquiryForm'
+import ReviewsSection from '../components/reviews/ReviewsSection'
 import ListingCard from '../components/listings/ListingCard'
 import Skeleton from '../components/ui/Skeleton'
 import Badge from '../components/ui/Badge'
@@ -228,8 +232,18 @@ export default function ListingDetailsPage() {
   const { data: listing, isLoading, isError } = useListing(id!)
   const similar = useListings({ area: listing?.area })
   const role = useSelector((state: RootState) => state.auth.role)
+  const { ids: favoriteIds, map: favoriteMap, enabled: favoritesEnabled } = useFavoriteIds()
+  const toggleFavorite = useToggleFavorite()
 
   const similarListings = (similar.data?.items ?? []).filter((l) => l.id !== listing?.id).slice(0, 3)
+
+  function handleToggleFavorite(listingId: string) {
+    toggleFavorite.mutate({
+      listingId,
+      isFavorited: favoriteIds.has(listingId),
+      favoriteId: favoriteMap.get(listingId),
+    })
+  }
 
   if (isLoading) return <LoadingSkeleton />
 
@@ -272,6 +286,19 @@ export default function ListingDetailsPage() {
             Back to listings
           </Link>
           <Badge variant={statusVariant}>{listing.status}</Badge>
+          {favoritesEnabled && (
+            <button
+              type="button"
+              onClick={() => handleToggleFavorite(listing.id)}
+              aria-label={favoriteIds.has(listing.id) ? 'Remove from favorites' : 'Add to favorites'}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-ink-soft px-4 py-2 text-sm text-paper/80 transition-colors hover:border-amberglow/40 hover:text-paper"
+            >
+              <Heart
+                className={`h-4 w-4 ${favoriteIds.has(listing.id) ? 'fill-amberglow text-amberglow' : 'text-paper/70'}`}
+              />
+              {favoriteIds.has(listing.id) ? 'Saved' : 'Save'}
+            </button>
+          )}
         </div>
 
         <div className="grid gap-8 pb-24 lg:grid-cols-3 lg:pb-10">
@@ -304,6 +331,8 @@ export default function ListingDetailsPage() {
               </div>
               <p className="text-sm leading-relaxed text-paper/70">{listing.description}</p>
             </motion.section>
+
+            <ReviewsSection listingId={listing.id} />
 
             {listing.amenities.length > 0 && (
               <motion.section
@@ -362,7 +391,12 @@ export default function ListingDetailsPage() {
                 <h2 className="mb-4 font-display text-lg font-semibold text-paper">Similar flats in {listing.area}</h2>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {similarListings.map((s) => (
-                    <ListingCard key={s.id} listing={s} />
+                    <ListingCard
+                      key={s.id}
+                      listing={s}
+                      isFavorited={favoriteIds.has(s.id)}
+                      onToggleFavorite={favoritesEnabled ? handleToggleFavorite : undefined}
+                    />
                   ))}
                 </div>
               </motion.section>

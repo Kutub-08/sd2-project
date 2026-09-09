@@ -23,12 +23,12 @@ beforeAll(async () => {
     .send({ email: "tenantA@test.com", password: "password123" })
     .expect(200);
   tokenA = loginRes.body.data.accessToken;
-});
+}, 30000);
 
 afterAll(async () => {
   await clearDatabase();
   await prisma.$disconnect();
-});
+}, 30000);
 
 function auth() {
   return { Authorization: `Bearer ${tokenA}` };

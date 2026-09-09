@@ -7,5 +7,6 @@ export type * from './models/PasswordResetToken';
 export type * from './models/RefreshToken';
 export type * from './models/Review';
 export type * from './models/User';
+export type * from './models/VerificationCode';
 export type * from './commonInputTypes';
 //# sourceMappingURL=models.d.ts.map

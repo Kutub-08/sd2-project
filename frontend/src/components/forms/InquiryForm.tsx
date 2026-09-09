@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { inquirySchema, type InquiryInput } from '../../schemas/inquiry.schema'
 import { useCreateInquiry } from '../../hooks/mutations/useCreateInquiry'
+import Button from '../ui/Button'
 import type { RootState } from '../../app/store'
 
 type Props = {
@@ -41,8 +42,8 @@ export default function InquiryForm({ listingId }: Props) {
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-lg border p-4 text-center text-sm text-gray-600">
-        <Link to="/login" className="text-blue-600 underline">Sign in</Link> to send an inquiry
+      <div className="rounded-2xl border border-white/10 bg-ink-soft/60 p-5 text-center text-sm text-mist">
+        <Link to="/login" className="text-teal underline underline-offset-4">Sign in</Link> to send an inquiry
       </div>
     )
   }
@@ -52,28 +53,24 @@ export default function InquiryForm({ listingId }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-lg border p-4">
-      <h3 className="text-sm font-semibold text-gray-900">Send an Inquiry</h3>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-2xl border border-white/10 bg-ink-soft/60 p-5 backdrop-blur-3xl">
+      <h3 className="font-display text-base font-semibold text-paper">Send an Inquiry</h3>
 
       <div>
         <textarea
           {...register('message')}
           rows={4}
           placeholder="Write your message here (min 10 characters)..."
-          className="block w-full rounded border px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="block w-full resize-y rounded-lg border border-line bg-black/20 px-3 py-2 text-sm text-paper placeholder:text-mist/50 transition-colors focus:border-teal/50 focus:outline-none focus:ring-2 focus:ring-teal/40"
         />
         {errors.message && (
-          <p className="mt-1 text-sm text-red-600">{errors.message.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.message.message}</p>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        {isPending ? 'Sending...' : 'Send Inquiry'}
-      </button>
+      <Button type="submit" variant="primary" className="w-full" loading={isPending}>
+        Send Inquiry
+      </Button>
     </form>
   )
 }

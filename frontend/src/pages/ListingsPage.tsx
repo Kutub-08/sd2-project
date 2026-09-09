@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { LayoutGrid, MapPin, Map as MapIcon } from 'lucide-react'
 import { useListings } from '../hooks/queries/useListings'
 import { useListingFilters } from '../utils/queryParams'
+import { useFavoriteIds } from '../hooks/queries/useFavoriteIds'
+import { useToggleFavorite } from '../hooks/mutations/useToggleFavorite'
 import FilterPanel from '../components/listings/FilterPanel'
 import ListingCard from '../components/listings/ListingCard'
 import SortDropdown from '../components/listings/SortDropdown'
@@ -51,8 +53,8 @@ function MapView({ listings }: { listings: NonNullable<ReturnType<typeof useList
   }
 
   const selected = listings.find((l) => l.id === selectedId) ?? listings[0]
-  const lat = Number(selected.lat ?? 23.8103)
-  const lng = Number(selected.lng ?? 90.4125)
+  const lat = Number(selected.latitude ?? 23.8103)
+  const lng = Number(selected.longitude ?? 90.4125)
   const margin = 0.02
   const bbox = `${lng - margin},${lat - margin},${lng + margin},${lat + margin}`
 
@@ -94,11 +96,21 @@ function MapView({ listings }: { listings: NonNullable<ReturnType<typeof useList
 export default function ListingsPage() {
   const { filters, setFilters } = useListingFilters()
   const { data, isLoading, isFetching } = useListings(filters)
+  const { ids: favoriteIds, map: favoriteMap, enabled: favoritesEnabled } = useFavoriteIds()
+  const toggleFavorite = useToggleFavorite()
   const [view, setView] = useState<'grid' | 'map'>('grid')
 
   const listings = data?.items ?? []
   const totalPages = data?.totalPages ?? 1
   const filterKey = useMemo(() => JSON.stringify(filters), [filters])
+
+  function handleToggleFavorite(listingId: string) {
+    toggleFavorite.mutate({
+      listingId,
+      isFavorited: favoriteIds.has(listingId),
+      favoriteId: favoriteMap.get(listingId),
+    })
+  }
 
   const toggleClass = (active: boolean) =>
     `inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -182,7 +194,11 @@ export default function ListingsPage() {
                   >
                     {listings.map((listing) => (
                       <motion.div key={listing.id} variants={cardVariants}>
-                        <ListingCard listing={listing} />
+                        <ListingCard
+                          listing={listing}
+                          isFavorited={favoriteIds.has(listing.id)}
+                          onToggleFavorite={favoritesEnabled ? handleToggleFavorite : undefined}
+                        />
                       </motion.div>
                     ))}
                   </motion.div>

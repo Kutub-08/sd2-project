@@ -6,6 +6,7 @@ import { useUpdateInquiryStatus } from '../../hooks/mutations/useUpdateInquirySt
 import Pagination from '../../components/ui/Pagination'
 import Skeleton from '../../components/ui/Skeleton'
 import Badge from '../../components/ui/Badge'
+import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
 import { formatDate } from '../../utils/formatDate'
 
@@ -39,16 +40,16 @@ export default function ReceivedInquiriesPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-        <p className="text-lg font-medium">Failed to load inquiries</p>
-        <Link to="/landlord/dashboard" className="mt-4 text-sm text-blue-600 underline">Back to dashboard</Link>
+      <div className="flex flex-col items-center justify-center py-20 text-mist">
+        <p className="text-lg font-medium text-paper">Failed to load inquiries</p>
+        <Link to="/landlord/dashboard" className="mt-4 text-sm text-teal underline underline-offset-4">Back to dashboard</Link>
       </div>
     )
   }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Received Inquiries</h1>
+      <h1 className="mb-6 font-display text-2xl font-semibold tracking-tight text-paper">Received Inquiries</h1>
 
       {isLoading ? (
         <div className="space-y-3">
@@ -67,32 +68,34 @@ export default function ReceivedInquiriesPage() {
         <>
           <div className="space-y-3">
             {data.items.map((inq) => (
-              <div key={inq.id} className="rounded-lg border bg-white p-4">
+              <div key={inq.id} className="rounded-2xl border border-white/10 bg-ink-soft/60 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-gray-900">{inq.tenant?.name ?? 'Unknown'}</p>
+                      <p className="text-sm font-semibold text-paper">{inq.tenant?.name ?? 'Unknown'}</p>
                       <Badge variant={statusVariant[inq.status] ?? 'default'}>{inq.status}</Badge>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">{inq.tenant?.email}</p>
+                    <p className="mt-1 text-xs text-mist">{inq.tenant?.email}</p>
                     <Link
                       to={`/listings/${inq.listingId}`}
-                      className="mt-1 inline-block text-xs text-blue-600 hover:underline"
+                      className="mt-1 inline-block text-xs text-teal hover:underline"
                     >
                       {inq.listing?.title ?? 'View listing'} &rarr;
                     </Link>
-                    <p className="mt-2 text-sm text-gray-700">{inq.message}</p>
-                    <p className="mt-1 text-xs text-gray-400">{formatDate(inq.createdAt)}</p>
+                    <p className="mt-2 text-sm text-paper/80">{inq.message}</p>
+                    <p className="mt-1 text-xs text-mist/70">{formatDate(inq.createdAt)}</p>
                   </div>
                   <div className="shrink-0">
                     {nextStatus[inq.status] && (
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="whitespace-nowrap"
                         onClick={() => handleAdvanceStatus(inq.id, inq.status)}
                         disabled={updateStatus.isPending}
-                        className="whitespace-nowrap rounded border px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                       >
                         Mark as {nextStatus[inq.status]}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>

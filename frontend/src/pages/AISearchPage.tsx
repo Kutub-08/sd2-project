@@ -1,17 +1,23 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, RotateCcw, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import AIResultsList from '../components/ai/AIResultsList'
 import { useAIRecommend } from '../hooks/queries/useAIRecommend'
 import type { AISortOption, AILocation } from '../api/ai.api'
 
 export default function AISearchPage() {
-  const { data, search, isPending } = useAIRecommend()
+  const { data, search, isPending, hasError } = useAIRecommend()
   const [input, setInput] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [sort, setSort] = useState<AISortOption>('relevance')
   const [location, setLocation] = useState<AILocation | undefined>(undefined)
+
+  useEffect(() => {
+    if (hasError && submitted) {
+      toast.error("Couldn't reach the search service — please try again")
+    }
+  }, [hasError, submitted])
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -143,16 +149,34 @@ export default function AISearchPage() {
                 transition={{ duration: 0.7, delay: 0.4 }}
                 className="mt-10"
               >
-                <AIResultsList
-                  results={data?.results ?? []}
-                  total={data?.total ?? 0}
-                  usedFallback={data?.usedFallback ?? false}
-                  isLoading={isPending}
-                  query={input}
-                  sort={sort}
-                  onSortChange={handleSortChange}
-                  parsedFilters={data?.parsedFilters}
-                />
+                {hasError ? (
+                  <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-ink-soft/60 p-10 text-center">
+                    <TriangleAlert className="h-10 w-10 text-amberglow" />
+                    <h3 className="mt-4 font-display text-lg font-semibold text-paper">Search failed</h3>
+                    <p className="mt-1 max-w-sm text-sm text-mist">
+                      We couldn&apos;t reach the search service. Check your connection and try again.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => search(input, 'relevance', undefined)}
+                      className="mt-6 inline-flex items-center gap-2 rounded-full bg-teal px-6 py-2.5 text-sm font-semibold text-ink-deep transition-colors hover:brightness-110 focus-visible:ring-2 focus-visible:ring-teal/60 focus-visible:outline-none"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Try again
+                    </button>
+                  </div>
+                ) : (
+                  <AIResultsList
+                    results={data?.results ?? []}
+                    total={data?.total ?? 0}
+                    usedFallback={data?.usedFallback ?? false}
+                    isLoading={isPending}
+                    query={input}
+                    sort={sort}
+                    onSortChange={handleSortChange}
+                    parsedFilters={data?.parsedFilters}
+                  />
+                )}
               </motion.div>
             )}
           </div>

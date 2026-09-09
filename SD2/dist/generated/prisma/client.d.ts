@@ -15,4 +15,5 @@ export type PasswordResetToken = Prisma.PasswordResetTokenModel;
 export type RefreshToken = Prisma.RefreshTokenModel;
 export type Review = Prisma.ReviewModel;
 export type User = Prisma.UserModel;
+export type VerificationCode = Prisma.VerificationCodeModel;
 //# sourceMappingURL=client.d.ts.map

@@ -20,6 +20,7 @@ async function main() {
   await prisma.listing.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.passwordResetToken.deleteMany();
+  await prisma.verificationCode.deleteMany();
   await prisma.aiSearchLog.deleteMany();
   await prisma.user.deleteMany();
 
@@ -66,6 +67,17 @@ async function main() {
       phone: "01744444444",
       passwordHash: password,
       role: "TENANT",
+      isVerified: true,
+    },
+  });
+
+  const admin1 = await prisma.user.create({
+    data: {
+      name: "Admin User",
+      email: "admin@example.com",
+      phone: "01755555555",
+      passwordHash: password,
+      role: "ADMIN",
       isVerified: true,
     },
   });
@@ -261,7 +273,7 @@ async function main() {
   });
 
   console.log("Seed complete:");
-  console.log(`  Users: 2 landlords + 2 tenants`);
+  console.log(`  Users: 2 landlords + 2 tenants + 1 admin`);
   console.log(`  Listings: ${listings.length}`);
   console.log(`  Images: ${listings.length * 2}`);
   console.log(`  Favorites: 4`);

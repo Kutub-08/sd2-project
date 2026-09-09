@@ -23,7 +23,10 @@ const listingInclude = {
 };
 
 const AI_CACHE_TTL_MS = 5 * 60 * 1000;
-const parseCache = new Map<string, { filters: ParsedFilters; parsedAt: number }>();
+const parseCache = new Map<
+  string,
+  { filters: ParsedFilters; parsedAt: number }
+>();
 
 function clampFilters(filters: ParsedFilters): ParsedFilters {
   return {
@@ -59,7 +62,7 @@ async function callAI(query: string): Promise<ParsedFilters | null> {
         temperature: 0,
         response_format: { type: "json_object" },
       },
-      { signal: controller.signal }
+      { signal: controller.signal },
     );
 
     const text = completion.choices[0]?.message?.content ?? "";
@@ -74,7 +77,10 @@ async function callAI(query: string): Promise<ParsedFilters | null> {
 }
 
 /** 5-minute in-memory cache so changing sort never re-runs the LLM. */
-async function getParsedFilters(query: string, userId?: string | null): Promise<ParsedFilters | null> {
+async function getParsedFilters(
+  query: string,
+  userId?: string | null,
+): Promise<ParsedFilters | null> {
   const key = `${userId ?? "anon"}|${query}`;
   const hit = parseCache.get(key);
   if (hit && Date.now() - hit.parsedAt < AI_CACHE_TTL_MS) {
@@ -103,14 +109,16 @@ function isFilterSet(filters: ParsedFilters): boolean {
 async function logSearch(
   query: string,
   parsedFilters: ParsedFilters | Record<string, never>,
-  userId?: string | null
+  userId?: string | null,
 ) {
   try {
     await prisma.aiSearchLog.create({
       data: {
         userId: userId ?? null,
         queryText: query,
-        parsedFilters: JSON.parse(JSON.stringify(parsedFilters ?? {})) as object,
+        parsedFilters: JSON.parse(
+          JSON.stringify(parsedFilters ?? {}),
+        ) as object,
       },
     });
   } catch {
@@ -132,17 +140,27 @@ type RankedListing = Record<string, unknown> & {
   createdAt: string;
 };
 
-function haversine(aLat: number, aLng: number, bLat: number, bLng: number): number {
+function haversine(
+  aLat: number,
+  aLng: number,
+  bLat: number,
+  bLng: number,
+): number {
   const R = 6371;
   const dLat = ((bLat - aLat) * Math.PI) / 180;
   const dLng = ((bLng - aLng) * Math.PI) / 180;
   const s =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    Math.cos((aLat * Math.PI) / 180) *
+      Math.cos((bLat * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 
-function scoreRelevance(listing: RankedListing, filters: ParsedFilters): number {
+function scoreRelevance(
+  listing: RankedListing,
+  filters: ParsedFilters,
+): number {
   let score = 0;
 
   if (filters.area) {
@@ -152,12 +170,24 @@ function scoreRelevance(listing: RankedListing, filters: ParsedFilters): number 
     else if (listingArea && listingArea.includes(target)) score += 2;
   }
 
-  if (filters.maxPrice !== undefined && Number(listing.price) <= filters.maxPrice) score += 2;
-  if (filters.minPrice !== undefined && Number(listing.price) >= filters.minPrice) score += 1;
-  if (filters.minBedrooms !== undefined && listing.bedrooms >= filters.minBedrooms) score += 1;
+  if (
+    filters.maxPrice !== undefined &&
+    Number(listing.price) <= filters.maxPrice
+  )
+    score += 2;
+  if (
+    filters.minPrice !== undefined &&
+    Number(listing.price) >= filters.minPrice
+  )
+    score += 1;
+  if (
+    filters.minBedrooms !== undefined &&
+    listing.bedrooms >= filters.minBedrooms
+  )
+    score += 1;
   if (filters.amenities && filters.amenities.length > 0) {
     const overlap = listing.amenities.filter((a) =>
-      filters.amenities!.some((f) => a.toLowerCase().includes(f.toLowerCase()))
+      filters.amenities!.some((f) => a.toLowerCase().includes(f.toLowerCase())),
     ).length;
     if (overlap > 0) score += Math.min(overlap, 3);
   }
@@ -165,15 +195,31 @@ function scoreRelevance(listing: RankedListing, filters: ParsedFilters): number 
   return score;
 }
 
-function sortByNearest(listings: RankedListing[], location: RecommendLocation): RankedListing[] {
+function sortByNearest(
+  listings: RankedListing[],
+  location: RecommendLocation,
+): RankedListing[] {
   return [...listings].sort((a, b) => {
-    const da = haversine(location.lat, location.lng, Number(a.latitude), Number(a.longitude));
-    const db = haversine(location.lat, location.lng, Number(b.latitude), Number(b.longitude));
+    const da = haversine(
+      location.lat,
+      location.lng,
+      Number(a.latitude),
+      Number(a.longitude),
+    );
+    const db = haversine(
+      location.lat,
+      location.lng,
+      Number(b.latitude),
+      Number(b.longitude),
+    );
     return da - db;
   });
 }
 
-function sortByRelevance(listings: RankedListing[], filters: ParsedFilters): RankedListing[] {
+function sortByRelevance(
+  listings: RankedListing[],
+  filters: ParsedFilters,
+): RankedListing[] {
   return [...listings].sort((a, b) => {
     const sa = scoreRelevance(a, filters);
     const sb = scoreRelevance(b, filters);
@@ -212,7 +258,7 @@ export async function recommend(
   query: string,
   userId?: string | null,
   sort: SortOption = "relevance",
-  location?: RecommendLocation
+  location?: RecommendLocation,
 ): Promise<RecommendResult> {
   const filters = await getParsedFilters(query, userId);
 
@@ -246,7 +292,11 @@ export async function recommend(
   }
 
   if (sort === "nearest" && !location) {
-    throw new AppError(400, "VALIDATION_ERROR", "Location is required for nearest-first sorting");
+    throw new AppError(
+      400,
+      "VALIDATION_ERROR",
+      "Location is required for nearest-first sorting",
+    );
   }
 
   try {
@@ -260,7 +310,10 @@ export async function recommend(
       : { createdAt: "desc" as const };
 
     const includeForSort =
-      sort === "highest_rated" || sort === "most_reviewed" || sort === "relevance" || sort === "nearest"
+      sort === "highest_rated" ||
+      sort === "most_reviewed" ||
+      sort === "relevance" ||
+      sort === "nearest"
         ? { ...listingInclude, reviews: { select: { rating: true } } }
         : listingInclude;
 

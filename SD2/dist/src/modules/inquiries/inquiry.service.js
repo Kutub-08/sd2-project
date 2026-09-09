@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { getSkipTake, getPaginationMeta } from "../../utils/pagination.js";
 const DAILY_LIMIT = 5;
 const inquiryInclude = {
     listing: {
@@ -39,12 +40,11 @@ export async function findSent(tenantId, page, limit) {
             where,
             include: inquiryInclude,
             orderBy: { createdAt: "desc" },
-            skip: (page - 1) * limit,
-            take: limit,
+            ...getSkipTake(page, limit),
         }),
         prisma.inquiry.count({ where }),
     ]);
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { items, ...getPaginationMeta(total, page, limit) };
 }
 export async function findReceived(landlordId, page, limit) {
     const where = {
@@ -60,12 +60,11 @@ export async function findReceived(landlordId, page, limit) {
                 },
             },
             orderBy: { createdAt: "desc" },
-            skip: (page - 1) * limit,
-            take: limit,
+            ...getSkipTake(page, limit),
         }),
         prisma.inquiry.count({ where }),
     ]);
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { items, ...getPaginationMeta(total, page, limit) };
 }
 export async function updateStatus(inquiryId, landlordId, status) {
     const inquiry = await prisma.inquiry.findUnique({

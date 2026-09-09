@@ -2,6 +2,7 @@ import { type Request, type Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { success } from "../../utils/apiResponse.js";
 import { param } from "../../utils/param.js";
+import { getPagination } from "../../utils/pagination.js";
 import * as inquiryService from "./inquiry.service.js";
 
 export const create = asyncHandler(async (req: Request, res: Response) => {
@@ -11,15 +12,19 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const findSent = asyncHandler(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const { page, limit } = getPagination(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+  );
   const result = await inquiryService.findSent(req.user!.id, page, limit);
   success(res, result);
 });
 
 export const findReceived = asyncHandler(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const { page, limit } = getPagination(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+  );
   const result = await inquiryService.findReceived(req.user!.id, page, limit);
   success(res, result);
 });

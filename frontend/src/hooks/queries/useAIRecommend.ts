@@ -9,6 +9,7 @@ import type {
 
 export function useAIRecommend() {
   const [data, setData] = useState<RecommendResult | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   const mutation = useMutation({
     mutationFn: ({
@@ -20,7 +21,13 @@ export function useAIRecommend() {
       sort: AISortOption;
       location?: AILocation;
     }) => recommendListings(query, sort, location),
-    onSuccess: (res) => setData(res),
+    onSuccess: (res) => {
+      setData(res);
+      setHasError(false);
+    },
+    onError: () => {
+      setHasError(true);
+    },
   });
 
   const { mutate } = mutation;
@@ -28,10 +35,14 @@ export function useAIRecommend() {
   return {
     ...mutation,
     data,
+    hasError,
     search: (
       query: string,
       sort: AISortOption = "relevance",
       location?: AILocation,
-    ) => mutate({ query, sort, location }),
+    ) => {
+      setHasError(false);
+      mutate({ query, sort, location });
+    },
   };
 }

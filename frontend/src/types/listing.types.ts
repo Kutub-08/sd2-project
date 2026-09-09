@@ -8,12 +8,12 @@ export type Listing = {
   sizeSqft: number
   bedrooms: number
   bathrooms: number
-  floorNumber: number
+  floorNumber: number | null
+  address: string
   area: string
   city: string
-  division: string
-  lat: number
-  lng: number
+  latitude: number | null
+  longitude: number | null
   amenities: string[]
   status: ListingStatus
   landlordId: string
@@ -34,7 +34,6 @@ export type ListingImage = {
   imageUrl: string
   isPrimary: boolean
   orderIndex: number
-  createdAt: string
 }
 
 export type ListingFilters = {

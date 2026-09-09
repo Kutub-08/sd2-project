@@ -39,3 +39,34 @@ export async function getMe() {
   const res = await axiosClient.get<ApiSuccess<User>>("/auth/me");
   return res.data;
 }
+
+export async function forgotPassword(email: string) {
+  const res = await axiosClient.post<ApiSuccess<{ message: string }>>(
+    "/auth/forgot-password",
+    { email },
+  );
+  return res.data;
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const res = await axiosClient.post<ApiSuccess<{ message: string }>>(
+    "/auth/reset-password",
+    { token, newPassword },
+  );
+  return res.data;
+}
+
+export async function requestVerification() {
+  const res = await axiosClient.post<ApiSuccess<{ message: string }>>(
+    "/auth/verify/request",
+  );
+  return res.data;
+}
+
+export async function verifyEmail(code: string) {
+  const res = await axiosClient.post<ApiSuccess<{ user: User }>>(
+    "/auth/verify",
+    { code },
+  );
+  return res.data;
+}

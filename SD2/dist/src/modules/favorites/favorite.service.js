@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { getSkipTake, getPaginationMeta } from "../../utils/pagination.js";
 const favoriteInclude = {
     listing: {
         include: {
@@ -33,17 +34,13 @@ export async function findAll(userId, page, limit) {
             where,
             include: favoriteInclude,
             orderBy: { createdAt: "desc" },
-            skip: (page - 1) * limit,
-            take: limit,
+            ...getSkipTake(page, limit),
         }),
         prisma.favorite.count({ where }),
     ]);
     return {
         items,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        ...getPaginationMeta(total, page, limit),
     };
 }
 export async function remove(userId, id) {

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
 import { authenticate } from "../../middleware/auth.js";
 import { authLimiter } from "../../middleware/rateLimiter.js";
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "./auth.schema.js";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, verifyEmailSchema } from "./auth.schema.js";
 import * as authController from "./auth.controller.js";
 
 const router = Router();
@@ -138,5 +138,44 @@ router.post("/reset-password", authLimiter, validate(resetPasswordSchema), authC
  *       401: { $ref: '#/components/schemas/Error' }
  */
 router.get("/me", authenticate, authController.getMe);
+
+/**
+ * @swagger
+ * /auth/verify/request:
+ *   post:
+ *     summary: Send a 6-digit email verification code to the current user
+ *     tags: [Auth]
+ *     security: [{ bearerAuth: [] }]
+ *     rateLimit: 5/min
+ *     responses:
+ *       200: { description: Verification code sent }
+ *       400: { $ref: '#/components/schemas/Error' }
+ *       401: { $ref: '#/components/schemas/Error' }
+ */
+router.post("/verify/request", authenticate, authLimiter, authController.requestVerification);
+
+/**
+ * @swagger
+ * /auth/verify:
+ *   post:
+ *     summary: Verify the current user's email with a 6-digit code
+ *     tags: [Auth]
+ *     security: [{ bearerAuth: [] }]
+ *     rateLimit: 5/min
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code]
+ *             properties:
+ *               code: { type: string, pattern: "^\\d{6}$" }
+ *     responses:
+ *       200: { description: Updated user profile with isVerified true }
+ *       400: { $ref: '#/components/schemas/Error' }
+ *       401: { $ref: '#/components/schemas/Error' }
+ */
+router.post("/verify", authenticate, authLimiter, validate(verifyEmailSchema), authController.verifyEmail);
 
 export default router;

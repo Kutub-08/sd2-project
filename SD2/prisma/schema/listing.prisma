@@ -12,8 +12,8 @@ model Listing {
   address     String
   area        String
   city        String
-  latitude    Decimal       @db.Decimal(10, 7)
-  longitude   Decimal       @db.Decimal(10, 7)
+  latitude    Decimal?  @db.Decimal(10, 7)
+  longitude   Decimal?  @db.Decimal(10, 7)
   amenities   String[]
   status      ListingStatus @default(AVAILABLE)
   createdAt   DateTime      @default(now()) @map("created_at")

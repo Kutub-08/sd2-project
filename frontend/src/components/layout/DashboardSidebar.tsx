@@ -18,8 +18,7 @@ function SidebarLink({ to, end, label }: { to: string; end?: boolean; label: str
       {({ isActive }) => (
         <>
           <span className={`relative flex h-1.5 w-1.5 shrink-0 ${isActive ? '' : 'opacity-0'}`}>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-teal" />
           </span>
           {label}
         </>
@@ -46,6 +45,11 @@ export default function DashboardSidebar() {
             <SidebarLink to="/landlord/dashboard" end label="Dashboard" />
             <SidebarLink to="/landlord/listings/new" label="New Listing" />
             <SidebarLink to="/landlord/inquiries" label="Received Inquiries" />
+          </>
+        )}
+        {role === 'ADMIN' && (
+          <>
+            <SidebarLink to="/admin" end label="Admin Console" />
           </>
         )}
       </nav>

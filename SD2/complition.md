@@ -1,203 +1,69 @@
-# To-Let — Completion Notes
+# Completion Tracker — backend vs planning.md
 
-## What's Been Done (backend / SD2)
+> Last updated: Aug 20, 2026. Tracks SD2 (Express 5 + Prisma v7 + PostgreSQL) against
+> `planning.md`. Everything in planning.md §1–§12 is implemented; the §13 "Remaining /
+> possible next steps" are logged as Not-started rows at the bottom of the table.
 
-The To-Let API backend is feature-complete against the core scope of planning.md. Highlights:
+## What's Been Done (backend)
 
-- **Auth** — full JWT flow (15-min access + 7-day httpOnly refresh cookie, rotated on refresh), register with role, login/logout, `GET /me`, and **password reset** (forgot/reset with single-use hashed tokens).
-- **Listings** — full CRUD (landlord-owned), public browse with filters/pagination/sort, status patching, landlord listings, and Cloudinary **image upload/delete**.
-- **Favorites**, **Inquiries** (tenant→landlord contact, status tracking, per-tenant day limit), and **Reviews** (rating 1–5).
-- **Users** — public profile, self-update (via `isSelf`), landlord listings.
-- **AI recommend + similar** — natural-language → Gemini parse → structured Prisma query, with a content-aware `fallbackSearch` when AI fails.
-- **Prisma v7** multi-file schema (11 models) + 2 migrations; **seed script** with realistic sample data.
-- **Hardening** — helmet, CORS allowlist, global + per-route rate limiters (test no-op), `isOwner`/`isSelf` guards, centralized `AppError` handler, Winston logging, Swagger at `/api/docs`.
+The To-Let API is feature-complete against planning.md's core scope. Highlights:
 
----
+- **Stack** — Node 22+, Express 5, TypeScript ESM (`"type": "module"`, `.js` import extensions), Prisma 7 multi-file schema with `@prisma/adapter-pg`, PostgreSQL.
+- **Security** — helmet headers, CORS allowlist (`CLIENT_URL` / `FRONTEND_URL` / `localhost:5173`), express-rate-limit tiers (global 100 req/15 min, auth/inquiry/AI 10 req/min), Zod validation on every route, bcrypt (10 rounds), JWT access (15 min) + refresh (7 days, httpOnly cookie, hashed in DB), reset/refresh tokens stored as SHA-256 hashes.
+- **Auth** — register/login/logout/refresh/me; forgot/reset password via Nodemailer SMTP with a `[DEV]` console-log fallback; **email OTP verification** (`POST /auth/verify/request` + `/auth/verify`, 10-min TTL, max 5 attempts, one active code); `requireVerified` gate on listing creation; `isBanned` enforced at login and re-checked from the DB on every authenticated request (bans/role changes apply immediately — no token-window staleness).
+- **Listings** — full CRUD with `isOwner` enforcement; filters (price, bedrooms, bathrooms, area, city, status), 4 sorts, pagination (shared helper in `utils/pagination.ts`); coords nullable at DB, required at API; images via Multer → Cloudinary (primary + ordering).
+- **Marketplace flows** — favorites (tenant-only, unique per user+listing), inquiries (tenant → landlord, rate-limited, PENDING → RESPONDED → CLOSED), reviews (one per tenant per listing, 409 on duplicate, includes tenant name).
+- **Admin module** — user list (paginated, role filter, never password_hash), role change + ban/unban with self-target guards (400), listing takedown → `INACTIVE` / reinstate → `AVAILABLE`; banned users rejected by `authenticate` and `login` (403).
+- **AI** — Groq (`llama-3.3-70b-versatile`, forced JSON, `temperature: 0`), parsed filters clamped before querying, 6 sort modes incl. `nearest` (haversine), 5-minute in-memory cache keyed by user+query, content-aware `fallbackSearch.ts` (disabled in test env), results logged to `ai_search_logs` (logging failures swallowed).
+- **Docs & ops** — Swagger UI at `/api/docs` (all endpoints documented), Winston + morgan logging, route-level + global limiters, `prisma.config.ts` wiring seed to `migrate reset`/`db seed`.
+- **Testing** — Jest + Supertest (ts-jest ESM): **131 tests** across 7 files (integration, admin, middleware, reviews, users, verification, unit utils), `test:coverage` script, `tests/globalSetup.ts` sets JWT secrets + DB cleanup.
 
-## Project Setup
-- TypeScript/Express.js backend with ESM (`"type": "module"`)
-- `package.json` merged from old project template — name `to-let-backend`, description "Flat Rental Marketplace Backend"
-- Dependencies: express, prisma, pg, bcryptjs, jsonwebtoken, cookie-parser, zod, helmet, cors, morgan, winston, dotenv, express-rate-limit, multer, cloudinary, openai, @google/generative-ai, groq-sdk, stripe, sslcommerz-lts, firebase-admin, nodemailer, swagger-jsdoc, swagger-ui-express, etc.
+## Build Status (planning.md §13)
 
-## Infrastructure
+| # | Area | Status | Notes |
+|---|------|--------|-------|
+| 1 | Project scaffold + middleware stack | ✅ Done | Express 5, TS ESM, helmet → cors → json → cookieParser → morgan → globalLimiter → routes → notFound → errorHandler |
+| 2 | Prisma v7 schema + migrations + seed | ✅ Done | 11 multi-file schema files; **6 migrations** (`init`, `add_password_reset_token`, `make_listing_coords_nullable`, `add_user_banned`, `add_verification_code`, `add_verification_code_created_at`) — reconciled with hosted DB; seed = 5 users (2 landlords + 2 tenants + 1 admin) / 7 listings / 14 images / 4 favorites / 3 inquiries, all passwords `password123` |
+| 3 | Auth + JWT/refresh + role middleware | ✅ Done | `authenticate` / `authorize(...roles)` / `isOwner` / `isSelf` / `requireVerified`; access 15 min, refresh 7 d httpOnly cookie scoped to `path: /api/auth` |
+| 4 | Password reset + email OTP verification | ✅ Done | Forgot/reset via SMTP with dev-console fallback; 6-digit OTP verify/request + verify |
+| 5 | Users module | ✅ Done | Public `GET /users/:id` (no password_hash), self-only PATCH, `GET /users/:id/listings` (400 for non-landlord) |
+| 6 | Listings CRUD + filters + images | ✅ Done | `listing.filters.ts` → Prisma where; pagination caps limit 100; Multer + Cloudinary uploads |
+| 7 | Favorites / Inquiries / Reviews | ✅ Done | With per-resource rate limits and duplicate guards |
+| 8 | Admin module | ✅ Done | `GET/PATCH` user list/role/ban, listing takedown/reinstate, self-target guards, ban enforcement |
+| 9 | AI recommend + similar | ✅ Done | `POST /ai/recommend` + `GET /ai/similar/:listingId`; Groq, clamp, fallback, cache, 6 sorts |
+| 10 | Swagger docs + Winston logging + rate limiting | ✅ Done | `/api/docs`; morgan → Winston stream; global + auth/inquiry/AI limiters |
+| 11 | Jest test suite | ✅ Done | 131 tests / 7 files; `npm test` (prereqs: Postgres + `npx prisma generate`) |
+| 12 | Redis-backed rate-limit store + AI cache | ❌ Not started | Rate limiting + AI search cache are in-memory (single-process) |
+| 13 | CI pipeline + Dockerfile / docker-compose + deployment | ❌ Not started | No CI config or container files yet |
+| 14 | PostGIS geolocation | ❌ Not started | `nearest` sort uses in-memory haversine |
+| 15 | Phone OTP verification | ❌ Not started | Blocked on an SMS provider (email OTP already done) |
+| 16 | Subscriptions / billing (Stripe / SSLCommerz) | ❌ Not started | Deps + `stripe:webhook` script stubbed, no route/module yet |
 
-| File | Purpose |
-|------|---------|
-| `src/server.ts` | Entrypoint — connects Prisma, starts Express on port 3000 |
-| `src/app.ts` | Express app — middleware stack: helmet → cors → json → cookieParser → morgan → swagger docs → routes → notFound → errorHandler |
-| `src/lib/prisma.ts` | PrismaClient singleton with `@prisma/adapter-pg` |
-| `src/routes/index.ts` | Mounts all module routers under `/api` |
-| `src/config/cloudinary.ts` | Cloudinary SDK config |
+## Missing from planned structure / Not implemented
 
-## Prisma Schema (`prisma/schema/`)
+| Item | Status |
+|------|--------|
+| Subscription & payment module (Stripe / SSLCommerz) | ❌ Not started — deps installed (`stripe`, `sslcommerz-lts`), `npm run stripe:webhook` forwards to `POST /api/subscription/webhook`, but no schema, module, or route exists |
+| File/document parsing (mammoth, pdf-parse), Firebase, OpenAI SDK | ❌ Installed but unused — leftover deps from a broader original scope (see §Extras) |
+| Redis rate-limit store / AI cache | ❌ In-memory only |
+| CI + Dockerfile / docker-compose + Vercel/Render config | ❌ None |
+| Phone OTP | ❌ Needs SMS provider |
 
-12 model files covering the full schema from planning.md:
+## Environment & Seed (local run)
 
-| File | Model | Key features |
-|------|-------|-------------|
-| `schema.prisma` | Generator + datasource (PostgreSQL) |
-| `enum.prisma` | `UserRole` (TENANT/LANDLORD/ADMIN), `ListingStatus` (AVAILABLE/RENTED/INACTIVE), `InquiryStatus` (PENDING/RESPONDED/CLOSED) |
-| `user.prisma` | `User` | UUID PK, unique email, role, password_hash, is_verified, relations to all modules |
-| `refreshToken.prisma` | `RefreshToken` | token_hash, expires_at, revoked |
-| `passwordResetToken.prisma` | `PasswordResetToken` | token_hash, expires_at, used_at (1-time use) |
-| `listing.prisma` | `Listing` | price, size_sqft, bedrooms, bathrooms, floor_number, lat/lng, amenities[], status; indexes on city+area, price, bedrooms+bathrooms, status, lat+lng, GIN on amenities |
-| `listingImage.prisma` | `ListingImage` | image_url, is_primary, order_index |
-| `favorite.prisma` | `Favorite` | `@@unique([userId, listingId])` |
-| `inquiry.prisma` | `Inquiry` | message, status |
-| `review.prisma` | `Review` | rating (1-5), comment |
-| `aiSearchLog.prisma` | `AiSearchLog` | query_text, parsed_filters (JsonB) |
+- Env vars (`.env.example`): `GROQ_API_KEY`, `GROQ_MODEL`, `DATABASE_URL`, `CLOUDINARY_CLOUD_NAME`/`_API_KEY`/`_API_SECRET`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `PORT`, `CLIENT_URL`, `SMTP_HOST`/`PORT`/`USER`/`PASS`, `EMAIL_FROM`.
+- Prereqs to run: Postgres (`DATABASE_URL`), `npx prisma generate` (client → `generated/prisma`, gitignored).
+- Seed creds: 5 users, all passwords `password123` (2 landlords + 2 tenants + 1 admin). `prisma.config.ts` wires seed so `prisma db seed` / `migrate reset` auto-seed.
 
-Migrations: `20260729214052_init` (all tables) + `20260806000000_add_password_reset_token` (password_reset_tokens table).
+## Notes & caveats
 
-## Modules Built
+- **Bans are immediate** — `authenticate` re-reads `role`/`isBanned`/`isVerified` from the DB on every request, so admin role/ban changes need no token refresh.
+- **Rate limiter is a no-op in `NODE_ENV=test`**; AI fallback search is also disabled in test env.
+- **SMTP fallback** — with `SMTP_HOST` empty, reset links are logged to the dev console instead of emailed (mailer also logs OTP codes in dev).
+- **AI reliability** — parsed filters are always clamped before the DB query; AI-log failures are swallowed so they never break the response.
+- **`ai_search_logs.user_id` is nullable (SetNull)** — anonymous searches are still logged.
+- **planning.md §4 lists `password_reset_tokens` twice** (duplicate section) — implemented once, as specified.
 
-### Auth (`/api/auth`)
-| Method | Path | Auth | Rate limit | Description |
-|--------|------|------|------------|-------------|
-| POST | `/api/auth/register` | No | 10/min | Register (name, email, phone, password, role) |
-| POST | `/api/auth/login` | No | 10/min | Login, returns access token + refreshToken cookie |
-| POST | `/api/auth/logout` | Bearer | — | Revokes refresh token, clears cookie |
-| POST | `/api/auth/refresh` | Cookie | 10/min | Rotates refresh token, issues new access token |
-| POST | `/api/auth/forgot-password` | No | 10/min | Issues hashed reset token (32-byte hex, 15 min TTL); generic message to prevent email enumeration |
-| POST | `/api/auth/reset-password` | No | 10/min | Validates 1-time token, re-hashes password, updates user + marks token used in a transaction |
-| GET | `/api/auth/me` | Bearer | — | Current user profile |
+## Extras (deps present beyond planning.md's documented stack)
 
-Files: `auth.controller.ts`, `auth.service.ts`, `auth.routes.ts`, `auth.schema.ts`, `auth.types.ts`
-
-### Users (`/api/users`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/users/:id` | Public | Public profile (never exposes password_hash) |
-| PATCH | `/api/users/:id` | Bearer + `isSelf` | Update own profile (name, phone) |
-| GET | `/api/users/:id/listings` | Public | Listings by a landlord user (400 if not a landlord) |
-
-Files: `user.controller.ts`, `user.service.ts`, `user.routes.ts`, `user.schema.ts`, `user.types.ts`
-
-### Listings (`/api/listings`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/listings` | Public | Paginated, filtered (price, beds, baths, area, city, status, sort) |
-| POST | `/api/listings` | Landlord | Create listing |
-| GET | `/api/listings/:id` | Public | Get single listing |
-| PUT | `/api/listings/:id` | Landlord (owner) | Update listing |
-| DELETE | `/api/listings/:id` | Landlord (owner) | Delete listing |
-| PATCH | `/api/listings/:id/status` | Landlord (owner) | Change status (AVAILABLE/RENTED/INACTIVE) |
-| GET | `/api/listings/landlord/:landlordId` | Public | All listings by a landlord |
-
-Files: `listing.controller.ts`, `listing.service.ts`, `listing.routes.ts`, `listing.schema.ts`, `listing.types.ts`, `listing.filters.ts`
-
-### Listing Images (`/api/listings/:id/images`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/listings/:id/images` | Landlord (owner) | Upload image (multipart, validates type/size) |
-| DELETE | `/api/listings/:id/images/:imageId` | Landlord (owner) | Delete image from Cloudinary + DB |
-
-Files: `image.controller.ts`, `image.service.ts`, `image.routes.ts`
-
-### Favorites (`/api/favorites`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/favorites` | Tenant | Save a listing (unique constraint) |
-| GET | `/api/favorites` | Tenant | Paginated saved listings |
-| DELETE | `/api/favorites/:id` | Tenant | Remove favorite (owner only) |
-
-Files: `favorite.controller.ts`, `favorite.service.ts`, `favorite.routes.ts`, `favorite.schema.ts`
-
-### Inquiries (`/api/inquiries`)
-| Method | Path | Auth | Rate limit | Description |
-|--------|------|------|------------|-------------|
-| POST | `/api/inquiries` | Tenant | 10/min + 5/day | Send inquiry about a listing |
-| GET | `/api/inquiries/sent` | Tenant | — | Tenant's sent inquiries |
-| GET | `/api/inquiries/received` | Landlord | — | Inquiries on landlord's listings |
-| PATCH | `/api/inquiries/:id/status` | Landlord | — | Update status (PENDING/RESPONDED/CLOSED) |
-
-Files: `inquiry.controller.ts`, `inquiry.service.ts`, `inquiry.routes.ts`, `inquiry.schema.ts`
-
-### Reviews (`/api/reviews`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/reviews` | Tenant | Create review (listingId, rating 1-5, comment) |
-| GET | `/api/reviews/listing/:listingId` | Public | All reviews for a listing |
-
-Files: `review.controller.ts`, `review.service.ts`, `review.routes.ts`, `review.schema.ts`
-
-### AI (`/api/ai`)
-| Method | Path | Limit | Description |
-|--------|------|-------|-------------|
-| POST | `/api/ai/recommend` | 10/min | Natural language → AI parses → Prisma query; fallbackSearch on failure |
-| GET | `/api/ai/similar/:listingId` | — | ±30% price, same area, ±1 bedroom |
-
-Files: `ai.controller.ts`, `ai.service.ts`, `ai.routes.ts`, `ai.schema.ts`, `ai.types.ts`, `prompts.ts`, `fallbackSearch.ts`
-
-**AI flow:** Gemini parses query → `ParsedFilters` (maxPrice, minBedrooms, area, amenities) → clamped → `buildWhereClause()` → Prisma query. Falls back to keyword search if AI fails/times out/returns empty.
-
-**`fallbackSearch.ts`** is content-aware: strips stop-words, parses price hints (`under/up to/৳Nk/taka` — `lte` for budget keywords, `equals` otherwise), detects bedroom counts from "2bhk"/"2 bed"/"2br" (structured field OR title), intersects keyword + bedroom + price constraints, capped at 20 results.
-
-**AI search logging (implemented):** every `/api/ai/recommend` call writes a row to `ai_search_logs` — `queryText` (raw query), `parsedFilters` (the clamped AI output as JsonB), and optional `userId` (when the caller is authenticated). Logging is fire-and-forget: failures are swallowed so they never affect the recommend response. Covered by integration tests (success path, fallback path).
-
-## Middleware
-
-| File | Purpose |
-|------|---------|
-| `auth.ts` | `authenticate` (JWT verify) + `authorize(...roles)` |
-| `validate.ts` | Generic Zod validation (body/query/params) |
-| `isOwner.ts` | Checks `listing.landlordId === req.user.id`, returns 403 |
-| `isSelf.ts` | Checks `req.params.id === req.user.id` for profile self-update, returns 403 |
-| `rateLimiter.ts` | `globalLimiter` (100/15min), `authLimiter` (10/min), `inquiryLimiter` (10/min), `aiLimiter` (10/min); all no-op when `NODE_ENV=test` |
-| `upload.ts` | Multer — memory storage, whitelist JPEG/PNG/GIF/WebP, 5MB limit |
-| `errorHandler.ts` | AppError-aware, consistent JSON error shape |
-| `notFound.ts` | 404 handler |
-
-## Config
-
-| File | Purpose |
-|------|---------|
-| `src/config/cloudinary.ts` | Cloudinary v2 config from env vars |
-| `src/config/logger.ts` | Winston setup — JSON in production (with `logs/error.log` + `logs/warn.log` files), colorized console in dev; `stream()` feeds morgan |
-
-## Utilities
-
-| File | Purpose |
-|------|---------|
-| `jwt.ts` | `generateAccessToken()` / `verifyAccessToken()` |
-| `hash.ts` | `hashPassword()`, `comparePassword()`, `hashToken()` (SHA-256 for refresh + password-reset tokens) |
-| `param.ts` | Safe `req.params[name]` accessor (handles array values) |
-| `asyncHandler.ts` | Wraps async route handlers, forwards errors |
-| `AppError.ts` | Custom error class (statusCode, code, message) |
-| `apiResponse.ts` | `success()` and `fail()` response helpers |
-
-## Seed Script
-
-- `prisma/seed.ts` (`npm run prisma:seed`) — clears tables in dependency order, then creates:
-  - Users: 2 landlords + 2 tenants (password: `password123` for all)
-  - 7 sample listings across Chattogram (Panchlaish, Kumira, Khulshi, Nasirabad, Agrabad, Halishahar)
-  - 2 placeholder images (picsum.photos) per listing
-  - 4 favorites + 3 inquiries
-
-## API Documentation
-
-- Swagger UI served at `GET /api/docs` (OpenAPI 3.0)
-- All route files annotated with `@swagger` JSDoc blocks
-- Components: `Error`, `Pagination` schemas; `bearerAuth` security scheme
-
-## Security & Rate Limiting
-
-- **CORS** — restricted to `CLIENT_URL` / `FRONTEND_URL` env vars, falls back to `localhost:5173` for dev
-- **Helmet** — security headers with `crossOriginResourcePolicy: "cross-origin"`
-- **Global limiter** — `globalLimiter`, 100 req/15min per IP
-- **Auth endpoints** — 10 req/min (`authLimiter`)
-- **Inquiry creation** — 10 req/min + service-level 5 inquiries/day per tenant
-- **AI recommend** — 10 req/min (cost control on LLM calls)
-- **Image upload** — file type/size validated by Multer
-- **Ownership** — `isOwner` middleware on all listing mutations; `isSelf` on profile updates
-- **Password reset tokens** — random 32-byte hex, stored as SHA-256 hash only, 15-min expiry, single-use, generic response to prevent email enumeration
-
-## Remaining (from planning.md)
-
-- [ ] Geo-radius / PostGIS search queries (lat/lng + bounding box exists in schema, not used for geo search)
-- [ ] AI search logging wired to DB (`ai_search_logs` table exists, not written)
-- [ ] Redis integration (rate-limit store, caching)
-- [ ] Email delivery for password reset (link is logged to console in dev)
-- [ ] SSLCommerz / Stripe payment integration
-- [ ] Tests (Jest + Supertest configured, no tests written)
-- [ ] Deployment config (Dockerfile, CI, env template)
+Installed in `package.json` but **not used by any module**: `stripe`, `sslcommerz-lts`, `firebase-admin`, `openai`, `mammoth`, `pdf-parse`, `node-cron`. They are the residue of a broader original scope (subscriptions, document parsing, Firebase push, scheduled jobs); planning.md's `stripe:webhook` script and any subscription work remain future steps (§Build Status row 16).

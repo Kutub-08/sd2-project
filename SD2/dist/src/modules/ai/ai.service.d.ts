@@ -3,8 +3,8 @@ export declare function recommend(query: string, userId?: string | null, sort?: 
 export declare function findSimilar(listingId: string): Promise<({
     landlord: {
         id: string;
-        name: string;
         email: string;
+        name: string;
         phone: string;
     };
     images: {
@@ -29,8 +29,8 @@ export declare function findSimilar(listingId: string): Promise<({
     address: string;
     area: string;
     city: string;
-    latitude: import("@prisma/client-runtime-utils").Decimal;
-    longitude: import("@prisma/client-runtime-utils").Decimal;
+    latitude: import("@prisma/client-runtime-utils").Decimal | null;
+    longitude: import("@prisma/client-runtime-utils").Decimal | null;
     amenities: string[];
     status: import("../../../generated/prisma/enums.js").ListingStatus;
 })[]>;

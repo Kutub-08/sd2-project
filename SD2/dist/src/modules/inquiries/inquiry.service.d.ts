@@ -8,19 +8,23 @@ export declare function create(tenantId: string, listingId: string, message: str
     };
     tenant: {
         id: string;
-        name: string;
         email: string;
+        name: string;
         phone: string;
     };
 } & {
     id: string;
-    message: string;
     createdAt: Date;
+    message: string;
     status: import("../../../generated/prisma/enums.js").InquiryStatus;
     listingId: string;
     tenantId: string;
 }>;
 export declare function findSent(tenantId: string, page: number, limit: number): Promise<{
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
     items: ({
         listing: {
             id: string;
@@ -31,24 +35,24 @@ export declare function findSent(tenantId: string, page: number, limit: number):
         };
         tenant: {
             id: string;
-            name: string;
             email: string;
+            name: string;
             phone: string;
         };
     } & {
         id: string;
-        message: string;
         createdAt: Date;
+        message: string;
         status: import("../../../generated/prisma/enums.js").InquiryStatus;
         listingId: string;
         tenantId: string;
     })[];
+}>;
+export declare function findReceived(landlordId: string, page: number, limit: number): Promise<{
     total: number;
     page: number;
     limit: number;
     totalPages: number;
-}>;
-export declare function findReceived(landlordId: string, page: number, limit: number): Promise<{
     items: ({
         listing: {
             id: string;
@@ -60,22 +64,18 @@ export declare function findReceived(landlordId: string, page: number, limit: nu
         };
         tenant: {
             id: string;
-            name: string;
             email: string;
+            name: string;
             phone: string;
         };
     } & {
         id: string;
-        message: string;
         createdAt: Date;
+        message: string;
         status: import("../../../generated/prisma/enums.js").InquiryStatus;
         listingId: string;
         tenantId: string;
     })[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
 }>;
 export declare function updateStatus(inquiryId: string, landlordId: string, status: "PENDING" | "RESPONDED" | "CLOSED"): Promise<{
     listing: {
@@ -87,14 +87,14 @@ export declare function updateStatus(inquiryId: string, landlordId: string, stat
     };
     tenant: {
         id: string;
-        name: string;
         email: string;
+        name: string;
         phone: string;
     };
 } & {
     id: string;
-    message: string;
     createdAt: Date;
+    message: string;
     status: import("../../../generated/prisma/enums.js").InquiryStatus;
     listingId: string;
     tenantId: string;

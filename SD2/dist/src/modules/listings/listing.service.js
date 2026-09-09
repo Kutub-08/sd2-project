@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { getSkipTake, getPaginationMeta } from "../../utils/pagination.js";
 import { buildWhereClause, buildOrderBy } from "./listing.filters.js";
 const listingInclude = {
     landlord: {
@@ -20,18 +21,14 @@ export async function findAll(query) {
         prisma.listing.findMany({
             where,
             orderBy,
-            skip: (query.page - 1) * query.limit,
-            take: query.limit,
+            ...getSkipTake(query.page, query.limit),
             include: listingInclude,
         }),
         prisma.listing.count({ where }),
     ]);
     return {
         items,
-        total,
-        page: query.page,
-        limit: query.limit,
-        totalPages: Math.ceil(total / query.limit),
+        ...getPaginationMeta(total, query.page, query.limit),
     };
 }
 export async function findById(id) {

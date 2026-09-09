@@ -1,6 +1,7 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { success } from "../../utils/apiResponse.js";
 import { param } from "../../utils/param.js";
+import { getPagination } from "../../utils/pagination.js";
 import * as favoriteService from "./favorite.service.js";
 export const create = asyncHandler(async (req, res) => {
     const { listingId } = req.body;
@@ -8,8 +9,7 @@ export const create = asyncHandler(async (req, res) => {
     success(res, favorite, 201);
 });
 export const findAll = asyncHandler(async (req, res) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Math.min(Number(req.query.limit) || 20, 100);
+    const { page, limit } = getPagination(req.query.page, req.query.limit);
     const result = await favoriteService.findAll(req.user.id, page, limit);
     success(res, result);
 });

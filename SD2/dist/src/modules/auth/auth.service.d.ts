@@ -35,6 +35,10 @@ export declare function forgotPassword(email: string): Promise<{
 export declare function resetPassword(token: string, newPassword: string): Promise<{
     message: string;
 }>;
+export declare function requestVerification(userId: string): Promise<{
+    message: string;
+}>;
+export declare function verifyEmail(userId: string, code: string): Promise<AuthPayload["user"]>;
 export declare function getMe(userId: string): Promise<{
     id: string;
     name: string;

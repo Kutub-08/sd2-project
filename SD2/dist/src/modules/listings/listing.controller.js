@@ -1,6 +1,7 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { success } from "../../utils/apiResponse.js";
 import { param } from "../../utils/param.js";
+import { getPagination } from "../../utils/pagination.js";
 import * as listingService from "./listing.service.js";
 export const create = asyncHandler(async (req, res) => {
     const listing = await listingService.create(req.user.id, req.body);
@@ -9,8 +10,7 @@ export const create = asyncHandler(async (req, res) => {
 export const findAll = asyncHandler(async (req, res) => {
     const { page, limit, minPrice, maxPrice, bedrooms, bathrooms, area, city, status, sort } = req.query;
     const result = await listingService.findAll({
-        page: Number(page) || 1,
-        limit: Math.min(Number(limit) || 20, 100),
+        ...getPagination(page, limit),
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
         bedrooms: bedrooms ? Number(bedrooms) : undefined,

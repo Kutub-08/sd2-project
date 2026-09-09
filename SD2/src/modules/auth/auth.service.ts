@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { hashPassword, comparePassword, hashToken } from "../../utils/hash.js";
 import { generateAccessToken } from "../../utils/jwt.js";
-import logger from "../../config/logger.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../../config/mailer.js";
 import type { AuthPayload } from "./auth.types.js";
 
 const REFRESH_TOKEN_BYTES = 64;
@@ -107,6 +107,9 @@ export async function login(email: string, password: string) {
   if (!valid) {
     throw new AppError(401, "INVALID_CREDENTIALS", "Invalid email or password");
   }
+  if (user.isBanned) {
+    throw new AppError(403, "FORBIDDEN", "This account has been banned");
+  }
   return buildAuthPayload(user.id);
 }
 
@@ -155,7 +158,7 @@ export async function forgotPassword(email: string): Promise<{ message: string }
   });
 
   const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${raw}`;
-  logger.info(`[DEV] Password reset link for ${email}: ${resetLink}`);
+  await sendPasswordResetEmail(user.email, resetLink);
 
   return { message };
 }
@@ -184,6 +187,74 @@ export async function resetPassword(token: string, newPassword: string): Promise
   ]);
 
   return { message: "Password has been reset successfully" };
+}
+
+const VERIFY_CODE_MINUTES = 10;
+const VERIFY_MAX_ATTEMPTS = 5;
+
+export async function requestVerification(userId: string): Promise<{ message: string }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+  if (user.isVerified) {
+    throw new AppError(400, "ALREADY_VERIFIED", "Email is already verified");
+  }
+
+  const code = crypto.randomInt(100000, 1000000).toString();
+  const codeHash = hashToken(code);
+  const expiresAt = new Date(Date.now() + VERIFY_CODE_MINUTES * 60 * 1000);
+
+  await prisma.$transaction([
+    prisma.verificationCode.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: new Date() },
+    }),
+    prisma.verificationCode.create({
+      data: { userId, codeHash, expiresAt },
+    }),
+  ]);
+
+  const sent = await sendVerificationEmail(user.email, code);
+  if (!sent) {
+    throw new AppError(500, "EMAIL_SEND_FAILED", "Failed to send the verification code. Please try again.");
+  }
+
+  return { message: "Verification code sent to your email" };
+}
+
+export async function verifyEmail(userId: string, code: string): Promise<AuthPayload["user"]> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+  if (user.isVerified) {
+    throw new AppError(400, "ALREADY_VERIFIED", "Email is already verified");
+  }
+
+  const record = await prisma.verificationCode.findFirst({
+    where: { userId, usedAt: null },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!record) {
+    throw new AppError(400, "INVALID_OTP", "No verification code found, please request a new one");
+  }
+  if (record.expiresAt < new Date()) {
+    throw new AppError(400, "EXPIRED_OTP", "Verification code has expired, please request a new one");
+  }
+
+  const matches = record.codeHash === hashToken(code);
+  if (!matches) {
+    const attempts = record.attempts + 1;
+    await prisma.verificationCode.update({
+      where: { id: record.id },
+      data: attempts >= VERIFY_MAX_ATTEMPTS ? { attempts, usedAt: new Date() } : { attempts },
+    });
+    throw new AppError(400, "INVALID_OTP", "Invalid verification code");
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { isVerified: true } }),
+    prisma.verificationCode.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+  ]);
+
+  return serializeUser({ ...user, isVerified: true });
 }
 
 export async function getMe(userId: string) {

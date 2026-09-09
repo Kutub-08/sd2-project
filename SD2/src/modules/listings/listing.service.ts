@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { getSkipTake, getPaginationMeta } from "../../utils/pagination.js";
 import { buildWhereClause, buildOrderBy } from "./listing.filters.js";
 import type { ListingFilters } from "./listing.filters.js";
 
@@ -42,8 +43,7 @@ export async function findAll(query: ListingFilters & {
     prisma.listing.findMany({
       where,
       orderBy,
-      skip: (query.page - 1) * query.limit,
-      take: query.limit,
+      ...getSkipTake(query.page, query.limit),
       include: listingInclude,
     }),
     prisma.listing.count({ where }),
@@ -51,10 +51,7 @@ export async function findAll(query: ListingFilters & {
 
   return {
     items,
-    total,
-    page: query.page,
-    limit: query.limit,
-    totalPages: Math.ceil(total / query.limit),
+    ...getPaginationMeta(total, query.page, query.limit),
   };
 }
 

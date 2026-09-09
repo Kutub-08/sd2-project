@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { motion, useScroll, useSpring } from 'framer-motion'
 import Navbar from './Navbar'
+import EmailVerificationBanner from './EmailVerificationBanner'
 import Footer from './Footer'
 
 function ScrollProgress() {
@@ -20,6 +21,7 @@ export default function AppLayout() {
     <div className="flex min-h-screen flex-col">
       <ScrollProgress />
       <Navbar />
+      <EmailVerificationBanner />
       <main className="flex-1">
         <Outlet />
       </main>

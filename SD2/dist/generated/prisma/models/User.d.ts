@@ -15,6 +15,7 @@ export type UserMinAggregateOutputType = {
     passwordHash: string | null;
     role: $Enums.UserRole | null;
     isVerified: boolean | null;
+    isBanned: boolean | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -26,6 +27,7 @@ export type UserMaxAggregateOutputType = {
     passwordHash: string | null;
     role: $Enums.UserRole | null;
     isVerified: boolean | null;
+    isBanned: boolean | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -37,6 +39,7 @@ export type UserCountAggregateOutputType = {
     passwordHash: number;
     role: number;
     isVerified: number;
+    isBanned: number;
     createdAt: number;
     updatedAt: number;
     _all: number;
@@ -49,6 +52,7 @@ export type UserMinAggregateInputType = {
     passwordHash?: true;
     role?: true;
     isVerified?: true;
+    isBanned?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -60,6 +64,7 @@ export type UserMaxAggregateInputType = {
     passwordHash?: true;
     role?: true;
     isVerified?: true;
+    isBanned?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -71,6 +76,7 @@ export type UserCountAggregateInputType = {
     passwordHash?: true;
     role?: true;
     isVerified?: true;
+    isBanned?: true;
     createdAt?: true;
     updatedAt?: true;
     _all?: true;
@@ -107,6 +113,7 @@ export type UserGroupByOutputType = {
     passwordHash: string;
     role: $Enums.UserRole;
     isVerified: boolean;
+    isBanned: boolean;
     createdAt: Date;
     updatedAt: Date;
     _count: UserCountAggregateOutputType | null;
@@ -127,6 +134,7 @@ export type UserWhereInput = {
     passwordHash?: Prisma.StringFilter<"User"> | string;
     role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole;
     isVerified?: Prisma.BoolFilter<"User"> | boolean;
+    isBanned?: Prisma.BoolFilter<"User"> | boolean;
     createdAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     listings?: Prisma.ListingListRelationFilter;
@@ -136,6 +144,7 @@ export type UserWhereInput = {
     reviews?: Prisma.ReviewListRelationFilter;
     aiSearchLogs?: Prisma.AiSearchLogListRelationFilter;
     passwordResetTokens?: Prisma.PasswordResetTokenListRelationFilter;
+    verificationCodes?: Prisma.VerificationCodeListRelationFilter;
 };
 export type UserOrderByWithRelationInput = {
     id?: Prisma.SortOrder;
@@ -145,6 +154,7 @@ export type UserOrderByWithRelationInput = {
     passwordHash?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
     isVerified?: Prisma.SortOrder;
+    isBanned?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     listings?: Prisma.ListingOrderByRelationAggregateInput;
@@ -154,6 +164,7 @@ export type UserOrderByWithRelationInput = {
     reviews?: Prisma.ReviewOrderByRelationAggregateInput;
     aiSearchLogs?: Prisma.AiSearchLogOrderByRelationAggregateInput;
     passwordResetTokens?: Prisma.PasswordResetTokenOrderByRelationAggregateInput;
+    verificationCodes?: Prisma.VerificationCodeOrderByRelationAggregateInput;
 };
 export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string;
@@ -166,6 +177,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
     passwordHash?: Prisma.StringFilter<"User"> | string;
     role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole;
     isVerified?: Prisma.BoolFilter<"User"> | boolean;
+    isBanned?: Prisma.BoolFilter<"User"> | boolean;
     createdAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     listings?: Prisma.ListingListRelationFilter;
@@ -175,6 +187,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
     reviews?: Prisma.ReviewListRelationFilter;
     aiSearchLogs?: Prisma.AiSearchLogListRelationFilter;
     passwordResetTokens?: Prisma.PasswordResetTokenListRelationFilter;
+    verificationCodes?: Prisma.VerificationCodeListRelationFilter;
 }, "id" | "email">;
 export type UserOrderByWithAggregationInput = {
     id?: Prisma.SortOrder;
@@ -184,6 +197,7 @@ export type UserOrderByWithAggregationInput = {
     passwordHash?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
     isVerified?: Prisma.SortOrder;
+    isBanned?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     _count?: Prisma.UserCountOrderByAggregateInput;
@@ -201,6 +215,7 @@ export type UserScalarWhereWithAggregatesInput = {
     passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string;
     role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole;
     isVerified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean;
+    isBanned?: Prisma.BoolWithAggregatesFilter<"User"> | boolean;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string;
     updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string;
 };
@@ -212,6 +227,7 @@ export type UserCreateInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -221,6 +237,7 @@ export type UserCreateInput = {
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateInput = {
     id?: string;
@@ -230,6 +247,7 @@ export type UserUncheckedCreateInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -239,6 +257,7 @@ export type UserUncheckedCreateInput = {
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -248,6 +267,7 @@ export type UserUpdateInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -257,6 +277,7 @@ export type UserUpdateInput = {
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -266,6 +287,7 @@ export type UserUncheckedUpdateInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
@@ -275,6 +297,7 @@ export type UserUncheckedUpdateInput = {
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateManyInput = {
     id?: string;
@@ -284,6 +307,7 @@ export type UserCreateManyInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -295,6 +319,7 @@ export type UserUpdateManyMutationInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -306,6 +331,7 @@ export type UserUncheckedUpdateManyInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -325,6 +351,7 @@ export type UserCountOrderByAggregateInput = {
     passwordHash?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
     isVerified?: Prisma.SortOrder;
+    isBanned?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -336,6 +363,7 @@ export type UserMaxOrderByAggregateInput = {
     passwordHash?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
     isVerified?: Prisma.SortOrder;
+    isBanned?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -347,6 +375,7 @@ export type UserMinOrderByAggregateInput = {
     passwordHash?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
     isVerified?: Prisma.SortOrder;
+    isBanned?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -439,6 +468,18 @@ export type UserUpdateOneRequiredWithoutReviewsNestedInput = {
 export type EnumUserRoleFieldUpdateOperationsInput = {
     set?: $Enums.UserRole;
 };
+export type UserCreateNestedOneWithoutVerificationCodesInput = {
+    create?: Prisma.XOR<Prisma.UserCreateWithoutVerificationCodesInput, Prisma.UserUncheckedCreateWithoutVerificationCodesInput>;
+    connectOrCreate?: Prisma.UserCreateOrConnectWithoutVerificationCodesInput;
+    connect?: Prisma.UserWhereUniqueInput;
+};
+export type UserUpdateOneRequiredWithoutVerificationCodesNestedInput = {
+    create?: Prisma.XOR<Prisma.UserCreateWithoutVerificationCodesInput, Prisma.UserUncheckedCreateWithoutVerificationCodesInput>;
+    connectOrCreate?: Prisma.UserCreateOrConnectWithoutVerificationCodesInput;
+    upsert?: Prisma.UserUpsertWithoutVerificationCodesInput;
+    connect?: Prisma.UserWhereUniqueInput;
+    update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutVerificationCodesInput, Prisma.UserUpdateWithoutVerificationCodesInput>, Prisma.UserUncheckedUpdateWithoutVerificationCodesInput>;
+};
 export type UserCreateWithoutAiSearchLogsInput = {
     id?: string;
     name: string;
@@ -447,6 +488,7 @@ export type UserCreateWithoutAiSearchLogsInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -455,6 +497,7 @@ export type UserCreateWithoutAiSearchLogsInput = {
     inquiries?: Prisma.InquiryCreateNestedManyWithoutTenantInput;
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutAiSearchLogsInput = {
     id?: string;
@@ -464,6 +507,7 @@ export type UserUncheckedCreateWithoutAiSearchLogsInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -472,6 +516,7 @@ export type UserUncheckedCreateWithoutAiSearchLogsInput = {
     inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutTenantInput;
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutAiSearchLogsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -494,6 +539,7 @@ export type UserUpdateWithoutAiSearchLogsInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -502,6 +548,7 @@ export type UserUpdateWithoutAiSearchLogsInput = {
     inquiries?: Prisma.InquiryUpdateManyWithoutTenantNestedInput;
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutAiSearchLogsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -511,6 +558,7 @@ export type UserUncheckedUpdateWithoutAiSearchLogsInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
@@ -519,6 +567,7 @@ export type UserUncheckedUpdateWithoutAiSearchLogsInput = {
     inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutTenantNestedInput;
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutFavoritesInput = {
     id?: string;
@@ -528,6 +577,7 @@ export type UserCreateWithoutFavoritesInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -536,6 +586,7 @@ export type UserCreateWithoutFavoritesInput = {
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutFavoritesInput = {
     id?: string;
@@ -545,6 +596,7 @@ export type UserUncheckedCreateWithoutFavoritesInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -553,6 +605,7 @@ export type UserUncheckedCreateWithoutFavoritesInput = {
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutFavoritesInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -575,6 +628,7 @@ export type UserUpdateWithoutFavoritesInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -583,6 +637,7 @@ export type UserUpdateWithoutFavoritesInput = {
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutFavoritesInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -592,6 +647,7 @@ export type UserUncheckedUpdateWithoutFavoritesInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
@@ -600,6 +656,7 @@ export type UserUncheckedUpdateWithoutFavoritesInput = {
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutInquiriesInput = {
     id?: string;
@@ -609,6 +666,7 @@ export type UserCreateWithoutInquiriesInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -617,6 +675,7 @@ export type UserCreateWithoutInquiriesInput = {
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutInquiriesInput = {
     id?: string;
@@ -626,6 +685,7 @@ export type UserUncheckedCreateWithoutInquiriesInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -634,6 +694,7 @@ export type UserUncheckedCreateWithoutInquiriesInput = {
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutInquiriesInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -656,6 +717,7 @@ export type UserUpdateWithoutInquiriesInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -664,6 +726,7 @@ export type UserUpdateWithoutInquiriesInput = {
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutInquiriesInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -673,6 +736,7 @@ export type UserUncheckedUpdateWithoutInquiriesInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
@@ -681,6 +745,7 @@ export type UserUncheckedUpdateWithoutInquiriesInput = {
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutListingsInput = {
     id?: string;
@@ -690,6 +755,7 @@ export type UserCreateWithoutListingsInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput;
@@ -698,6 +764,7 @@ export type UserCreateWithoutListingsInput = {
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutListingsInput = {
     id?: string;
@@ -707,6 +774,7 @@ export type UserUncheckedCreateWithoutListingsInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
@@ -715,6 +783,7 @@ export type UserUncheckedCreateWithoutListingsInput = {
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutListingsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -737,6 +806,7 @@ export type UserUpdateWithoutListingsInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput;
@@ -745,6 +815,7 @@ export type UserUpdateWithoutListingsInput = {
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutListingsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -754,6 +825,7 @@ export type UserUncheckedUpdateWithoutListingsInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
@@ -762,6 +834,7 @@ export type UserUncheckedUpdateWithoutListingsInput = {
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutPasswordResetTokensInput = {
     id?: string;
@@ -771,6 +844,7 @@ export type UserCreateWithoutPasswordResetTokensInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -779,6 +853,7 @@ export type UserCreateWithoutPasswordResetTokensInput = {
     inquiries?: Prisma.InquiryCreateNestedManyWithoutTenantInput;
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
     id?: string;
@@ -788,6 +863,7 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -796,6 +872,7 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
     inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutTenantInput;
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutPasswordResetTokensInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -818,6 +895,7 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -826,6 +904,7 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
     inquiries?: Prisma.InquiryUpdateManyWithoutTenantNestedInput;
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -835,6 +914,7 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
@@ -843,6 +923,7 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
     inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutTenantNestedInput;
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutRefreshTokensInput = {
     id?: string;
@@ -852,6 +933,7 @@ export type UserCreateWithoutRefreshTokensInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -860,6 +942,7 @@ export type UserCreateWithoutRefreshTokensInput = {
     reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutRefreshTokensInput = {
     id?: string;
@@ -869,6 +952,7 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -877,6 +961,7 @@ export type UserUncheckedCreateWithoutRefreshTokensInput = {
     reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutRefreshTokensInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -899,6 +984,7 @@ export type UserUpdateWithoutRefreshTokensInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -907,6 +993,7 @@ export type UserUpdateWithoutRefreshTokensInput = {
     reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutRefreshTokensInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -916,6 +1003,7 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
@@ -924,6 +1012,7 @@ export type UserUncheckedUpdateWithoutRefreshTokensInput = {
     reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutReviewsInput = {
     id?: string;
@@ -933,6 +1022,7 @@ export type UserCreateWithoutReviewsInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
@@ -941,6 +1031,7 @@ export type UserCreateWithoutReviewsInput = {
     inquiries?: Prisma.InquiryCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutReviewsInput = {
     id?: string;
@@ -950,6 +1041,7 @@ export type UserUncheckedCreateWithoutReviewsInput = {
     passwordHash: string;
     role?: $Enums.UserRole;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
@@ -958,6 +1050,7 @@ export type UserUncheckedCreateWithoutReviewsInput = {
     inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutTenantInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutReviewsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -980,6 +1073,7 @@ export type UserUpdateWithoutReviewsInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
@@ -988,6 +1082,7 @@ export type UserUpdateWithoutReviewsInput = {
     inquiries?: Prisma.InquiryUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutReviewsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -997,12 +1092,103 @@ export type UserUncheckedUpdateWithoutReviewsInput = {
     passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
     role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
     isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
     refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
     favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput;
     inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutTenantNestedInput;
+    aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
+    passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
+    verificationCodes?: Prisma.VerificationCodeUncheckedUpdateManyWithoutUserNestedInput;
+};
+export type UserCreateWithoutVerificationCodesInput = {
+    id?: string;
+    name: string;
+    email: string;
+    phone: string;
+    passwordHash: string;
+    role?: $Enums.UserRole;
+    isVerified?: boolean;
+    isBanned?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    listings?: Prisma.ListingCreateNestedManyWithoutLandlordInput;
+    refreshTokens?: Prisma.RefreshTokenCreateNestedManyWithoutUserInput;
+    favorites?: Prisma.FavoriteCreateNestedManyWithoutUserInput;
+    inquiries?: Prisma.InquiryCreateNestedManyWithoutTenantInput;
+    reviews?: Prisma.ReviewCreateNestedManyWithoutTenantInput;
+    aiSearchLogs?: Prisma.AiSearchLogCreateNestedManyWithoutUserInput;
+    passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput;
+};
+export type UserUncheckedCreateWithoutVerificationCodesInput = {
+    id?: string;
+    name: string;
+    email: string;
+    phone: string;
+    passwordHash: string;
+    role?: $Enums.UserRole;
+    isVerified?: boolean;
+    isBanned?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    listings?: Prisma.ListingUncheckedCreateNestedManyWithoutLandlordInput;
+    refreshTokens?: Prisma.RefreshTokenUncheckedCreateNestedManyWithoutUserInput;
+    favorites?: Prisma.FavoriteUncheckedCreateNestedManyWithoutUserInput;
+    inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutTenantInput;
+    reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutTenantInput;
+    aiSearchLogs?: Prisma.AiSearchLogUncheckedCreateNestedManyWithoutUserInput;
+    passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput;
+};
+export type UserCreateOrConnectWithoutVerificationCodesInput = {
+    where: Prisma.UserWhereUniqueInput;
+    create: Prisma.XOR<Prisma.UserCreateWithoutVerificationCodesInput, Prisma.UserUncheckedCreateWithoutVerificationCodesInput>;
+};
+export type UserUpsertWithoutVerificationCodesInput = {
+    update: Prisma.XOR<Prisma.UserUpdateWithoutVerificationCodesInput, Prisma.UserUncheckedUpdateWithoutVerificationCodesInput>;
+    create: Prisma.XOR<Prisma.UserCreateWithoutVerificationCodesInput, Prisma.UserUncheckedCreateWithoutVerificationCodesInput>;
+    where?: Prisma.UserWhereInput;
+};
+export type UserUpdateToOneWithWhereWithoutVerificationCodesInput = {
+    where?: Prisma.UserWhereInput;
+    data: Prisma.XOR<Prisma.UserUpdateWithoutVerificationCodesInput, Prisma.UserUncheckedUpdateWithoutVerificationCodesInput>;
+};
+export type UserUpdateWithoutVerificationCodesInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    name?: Prisma.StringFieldUpdateOperationsInput | string;
+    email?: Prisma.StringFieldUpdateOperationsInput | string;
+    phone?: Prisma.StringFieldUpdateOperationsInput | string;
+    passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
+    role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
+    isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    listings?: Prisma.ListingUpdateManyWithoutLandlordNestedInput;
+    refreshTokens?: Prisma.RefreshTokenUpdateManyWithoutUserNestedInput;
+    favorites?: Prisma.FavoriteUpdateManyWithoutUserNestedInput;
+    inquiries?: Prisma.InquiryUpdateManyWithoutTenantNestedInput;
+    reviews?: Prisma.ReviewUpdateManyWithoutTenantNestedInput;
+    aiSearchLogs?: Prisma.AiSearchLogUpdateManyWithoutUserNestedInput;
+    passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput;
+};
+export type UserUncheckedUpdateWithoutVerificationCodesInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    name?: Prisma.StringFieldUpdateOperationsInput | string;
+    email?: Prisma.StringFieldUpdateOperationsInput | string;
+    phone?: Prisma.StringFieldUpdateOperationsInput | string;
+    passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
+    role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole;
+    isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    isBanned?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    listings?: Prisma.ListingUncheckedUpdateManyWithoutLandlordNestedInput;
+    refreshTokens?: Prisma.RefreshTokenUncheckedUpdateManyWithoutUserNestedInput;
+    favorites?: Prisma.FavoriteUncheckedUpdateManyWithoutUserNestedInput;
+    inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutTenantNestedInput;
+    reviews?: Prisma.ReviewUncheckedUpdateManyWithoutTenantNestedInput;
     aiSearchLogs?: Prisma.AiSearchLogUncheckedUpdateManyWithoutUserNestedInput;
     passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput;
 };
@@ -1014,6 +1200,7 @@ export type UserCountOutputType = {
     reviews: number;
     aiSearchLogs: number;
     passwordResetTokens: number;
+    verificationCodes: number;
 };
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     listings?: boolean | UserCountOutputTypeCountListingsArgs;
@@ -1023,6 +1210,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
     reviews?: boolean | UserCountOutputTypeCountReviewsArgs;
     aiSearchLogs?: boolean | UserCountOutputTypeCountAiSearchLogsArgs;
     passwordResetTokens?: boolean | UserCountOutputTypeCountPasswordResetTokensArgs;
+    verificationCodes?: boolean | UserCountOutputTypeCountVerificationCodesArgs;
 };
 export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null;
@@ -1048,6 +1236,9 @@ export type UserCountOutputTypeCountAiSearchLogsArgs<ExtArgs extends runtime.Typ
 export type UserCountOutputTypeCountPasswordResetTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     where?: Prisma.PasswordResetTokenWhereInput;
 };
+export type UserCountOutputTypeCountVerificationCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    where?: Prisma.VerificationCodeWhereInput;
+};
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
     id?: boolean;
     name?: boolean;
@@ -1056,6 +1247,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     passwordHash?: boolean;
     role?: boolean;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     listings?: boolean | Prisma.User$listingsArgs<ExtArgs>;
@@ -1065,6 +1257,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     reviews?: boolean | Prisma.User$reviewsArgs<ExtArgs>;
     aiSearchLogs?: boolean | Prisma.User$aiSearchLogsArgs<ExtArgs>;
     passwordResetTokens?: boolean | Prisma.User$passwordResetTokensArgs<ExtArgs>;
+    verificationCodes?: boolean | Prisma.User$verificationCodesArgs<ExtArgs>;
     _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>;
 }, ExtArgs["result"]["user"]>;
 export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1075,6 +1268,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     passwordHash?: boolean;
     role?: boolean;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 }, ExtArgs["result"]["user"]>;
@@ -1086,6 +1280,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     passwordHash?: boolean;
     role?: boolean;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 }, ExtArgs["result"]["user"]>;
@@ -1097,10 +1292,11 @@ export type UserSelectScalar = {
     passwordHash?: boolean;
     role?: boolean;
     isVerified?: boolean;
+    isBanned?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 };
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "role" | "isVerified" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "role" | "isVerified" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     listings?: boolean | Prisma.User$listingsArgs<ExtArgs>;
     refreshTokens?: boolean | Prisma.User$refreshTokensArgs<ExtArgs>;
@@ -1109,6 +1305,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
     reviews?: boolean | Prisma.User$reviewsArgs<ExtArgs>;
     aiSearchLogs?: boolean | Prisma.User$aiSearchLogsArgs<ExtArgs>;
     passwordResetTokens?: boolean | Prisma.User$passwordResetTokensArgs<ExtArgs>;
+    verificationCodes?: boolean | Prisma.User$verificationCodesArgs<ExtArgs>;
     _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {};
@@ -1123,6 +1320,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
         reviews: Prisma.$ReviewPayload<ExtArgs>[];
         aiSearchLogs: Prisma.$AiSearchLogPayload<ExtArgs>[];
         passwordResetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[];
+        verificationCodes: Prisma.$VerificationCodePayload<ExtArgs>[];
     };
     scalars: runtime.Types.Extensions.GetPayloadResult<{
         id: string;
@@ -1132,6 +1330,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
         passwordHash: string;
         role: $Enums.UserRole;
         isVerified: boolean;
+        isBanned: boolean;
         createdAt: Date;
         updatedAt: Date;
     }, ExtArgs["result"]["user"]>;
@@ -1193,6 +1392,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
     reviews<T extends Prisma.User$reviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     aiSearchLogs<T extends Prisma.User$aiSearchLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$aiSearchLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiSearchLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     passwordResetTokens<T extends Prisma.User$passwordResetTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$passwordResetTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PasswordResetTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
+    verificationCodes<T extends Prisma.User$verificationCodesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$verificationCodesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VerificationCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): runtime.Types.Utils.JsPromise<T | TResult>;
     finally(onfinally?: (() => void) | undefined | null): runtime.Types.Utils.JsPromise<T>;
@@ -1205,6 +1405,7 @@ export interface UserFieldRefs {
     readonly passwordHash: Prisma.FieldRef<"User", 'String'>;
     readonly role: Prisma.FieldRef<"User", 'UserRole'>;
     readonly isVerified: Prisma.FieldRef<"User", 'Boolean'>;
+    readonly isBanned: Prisma.FieldRef<"User", 'Boolean'>;
     readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>;
     readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>;
 }
@@ -1382,6 +1583,17 @@ export type User$passwordResetTokensArgs<ExtArgs extends runtime.Types.Extension
     take?: number;
     skip?: number;
     distinct?: Prisma.PasswordResetTokenScalarFieldEnum | Prisma.PasswordResetTokenScalarFieldEnum[];
+};
+export type User$verificationCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    select?: Prisma.VerificationCodeSelect<ExtArgs> | null;
+    omit?: Prisma.VerificationCodeOmit<ExtArgs> | null;
+    include?: Prisma.VerificationCodeInclude<ExtArgs> | null;
+    where?: Prisma.VerificationCodeWhereInput;
+    orderBy?: Prisma.VerificationCodeOrderByWithRelationInput | Prisma.VerificationCodeOrderByWithRelationInput[];
+    cursor?: Prisma.VerificationCodeWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: Prisma.VerificationCodeScalarFieldEnum | Prisma.VerificationCodeScalarFieldEnum[];
 };
 export type UserDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.UserSelect<ExtArgs> | null;

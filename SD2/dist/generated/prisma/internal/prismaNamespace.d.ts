@@ -169,6 +169,7 @@ export declare const ModelName: {
     readonly RefreshToken: "RefreshToken";
     readonly Review: "Review";
     readonly User: "User";
+    readonly VerificationCode: "VerificationCode";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export interface TypeMapCb<GlobalOmitOptions = {}> extends runtime.Types.Utils.Fn<{
@@ -181,7 +182,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "aiSearchLog" | "favorite" | "inquiry" | "listing" | "listingImage" | "passwordResetToken" | "refreshToken" | "review" | "user";
+        modelProps: "aiSearchLog" | "favorite" | "inquiry" | "listing" | "listingImage" | "passwordResetToken" | "refreshToken" | "review" | "user" | "verificationCode";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -851,6 +852,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 };
             };
         };
+        VerificationCode: {
+            payload: Prisma.$VerificationCodePayload<ExtArgs>;
+            fields: Prisma.VerificationCodeFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.VerificationCodeFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.VerificationCodeFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>;
+                };
+                findFirst: {
+                    args: Prisma.VerificationCodeFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.VerificationCodeFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>;
+                };
+                findMany: {
+                    args: Prisma.VerificationCodeFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>[];
+                };
+                create: {
+                    args: Prisma.VerificationCodeCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>;
+                };
+                createMany: {
+                    args: Prisma.VerificationCodeCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.VerificationCodeCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>[];
+                };
+                delete: {
+                    args: Prisma.VerificationCodeDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>;
+                };
+                update: {
+                    args: Prisma.VerificationCodeUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>;
+                };
+                deleteMany: {
+                    args: Prisma.VerificationCodeDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.VerificationCodeUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.VerificationCodeUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>[];
+                };
+                upsert: {
+                    args: Prisma.VerificationCodeUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$VerificationCodePayload>;
+                };
+                aggregate: {
+                    args: Prisma.VerificationCodeAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateVerificationCode>;
+                };
+                groupBy: {
+                    args: Prisma.VerificationCodeGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.VerificationCodeGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.VerificationCodeCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.VerificationCodeCountAggregateOutputType> | number;
+                };
+            };
+        };
     };
 } & {
     other: {
@@ -968,10 +1043,21 @@ export declare const UserScalarFieldEnum: {
     readonly passwordHash: "passwordHash";
     readonly role: "role";
     readonly isVerified: "isVerified";
+    readonly isBanned: "isBanned";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+export declare const VerificationCodeScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly codeHash: "codeHash";
+    readonly expiresAt: "expiresAt";
+    readonly usedAt: "usedAt";
+    readonly attempts: "attempts";
+    readonly createdAt: "createdAt";
+};
+export type VerificationCodeScalarFieldEnum = (typeof VerificationCodeScalarFieldEnum)[keyof typeof VerificationCodeScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: "asc";
     readonly desc: "desc";
@@ -1053,6 +1139,7 @@ export type GlobalOmitConfig = {
     refreshToken?: Prisma.RefreshTokenOmit;
     review?: Prisma.ReviewOmit;
     user?: Prisma.UserOmit;
+    verificationCode?: Prisma.VerificationCodeOmit;
 };
 export type LogLevel = 'info' | 'query' | 'warn' | 'error';
 export type LogDefinition = {

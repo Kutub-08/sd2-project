@@ -95,7 +95,9 @@ function haversine(aLat, aLng, bLat, bLng) {
     const dLat = ((bLat - aLat) * Math.PI) / 180;
     const dLng = ((bLng - aLng) * Math.PI) / 180;
     const s = Math.sin(dLat / 2) ** 2 +
-        Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+        Math.cos((aLat * Math.PI) / 180) *
+            Math.cos((bLat * Math.PI) / 180) *
+            Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
 function scoreRelevance(listing, filters) {
@@ -108,11 +110,14 @@ function scoreRelevance(listing, filters) {
         else if (listingArea && listingArea.includes(target))
             score += 2;
     }
-    if (filters.maxPrice !== undefined && Number(listing.price) <= filters.maxPrice)
+    if (filters.maxPrice !== undefined &&
+        Number(listing.price) <= filters.maxPrice)
         score += 2;
-    if (filters.minPrice !== undefined && Number(listing.price) >= filters.minPrice)
+    if (filters.minPrice !== undefined &&
+        Number(listing.price) >= filters.minPrice)
         score += 1;
-    if (filters.minBedrooms !== undefined && listing.bedrooms >= filters.minBedrooms)
+    if (filters.minBedrooms !== undefined &&
+        listing.bedrooms >= filters.minBedrooms)
         score += 1;
     if (filters.amenities && filters.amenities.length > 0) {
         const overlap = listing.amenities.filter((a) => filters.amenities.some((f) => a.toLowerCase().includes(f.toLowerCase()))).length;
@@ -198,7 +203,10 @@ export async function recommend(query, userId, sort = "relevance", location) {
                 ? { price: "asc" }
                 : { price: "desc" }
             : { createdAt: "desc" };
-        const includeForSort = sort === "highest_rated" || sort === "most_reviewed" || sort === "relevance" || sort === "nearest"
+        const includeForSort = sort === "highest_rated" ||
+            sort === "most_reviewed" ||
+            sort === "relevance" ||
+            sort === "nearest"
             ? { ...listingInclude, reviews: { select: { rating: true } } }
             : listingInclude;
         if (prismaSortable) {
